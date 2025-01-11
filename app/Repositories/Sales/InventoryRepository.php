@@ -38,6 +38,7 @@ class InventoryRepository
         return Inventory::where('warehouse_id', $warehouseId)
             ->where('medicament_id', $medicamentId)
             ->with(['medicament', 'warehouse'])
+            ->orderBy('created_at', 'desc')
             ->paginate();
     }
 

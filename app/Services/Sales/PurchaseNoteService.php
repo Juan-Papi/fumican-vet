@@ -30,4 +30,9 @@ class PurchaseNoteService
     {
         return $this->purchaseNoteRepository->update($id, $purchaseNoteData);
     }
+
+    public function deletePurchaseNoteById($id)
+    {
+        return $this->purchaseNoteRepository->deleteById($id);
+    }
 }

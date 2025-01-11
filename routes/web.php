@@ -103,6 +103,7 @@ Route::middleware([
             Route::put('{id}', [PurchaseNoteController::class, 'update'])->name('purchase.update');
             Route::get('{id}', [PurchaseNoteController::class, 'show'])->name('purchase.show');
             Route::get('purchases/{id}/pdf', [PurchaseNoteController::class, 'generatePdf'])->name('purchase.pdf');
+            Route::delete('{id}', [PurchaseNoteController::class, 'destroy'])->name('purchase.destroy');
         });
 
         Route::group(['prefix' => 'sales-note'], function () {

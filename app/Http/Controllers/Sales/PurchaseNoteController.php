@@ -19,7 +19,7 @@ use PDF;
 
 class PurchaseNoteController extends Controller
 {
-    public function __construct(protected PurchaseNoteService $purchaseNoteService, protected PurchaseNoteDetailService $purchaseNoteDetailService) {}
+    public function __construct(protected PurchaseNoteService $purchaseNoteService, protected PurchaseNoteDetailService $purchaseNoteDetailService, protected InventoryService $inventoryService) {}
 
     public function index()
     {
@@ -196,6 +196,28 @@ class PurchaseNoteController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'Error al actualizar la nota de compra: ' . $e->getMessage()]);
+        }
+    }
+
+    public function destroy($id)
+    {
+        DB::beginTransaction();
+        try {
+            $purchaseNote = $this->purchaseNoteService->getPurchaseNoteById($id);
+            $purchaseNoteDetails = $this->purchaseNoteDetailService->getPurchaseNoteDetailsByPurchaseNoteId($id);
+
+            foreach ($purchaseNoteDetails as $detail) {
+                $this->inventoryService->deleteInventoriesByMedicamentAndWarehouse($detail->medicament_id, $purchaseNote->warehouse->id);
+                $this->purchaseNoteDetailService->deleteById($detail->id);
+            }
+
+            $this->purchaseNoteService->deletePurchaseNoteById($id);
+
+            DB::commit();
+            return redirect()->route('purchase.index')->with('success', 'Nota de compra eliminada exitosamente');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Error al eliminar la nota de compra: ' . $e->getMessage()]);
         }
     }
 }

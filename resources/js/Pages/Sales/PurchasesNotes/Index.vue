@@ -38,7 +38,7 @@ const viewPurchase = (purchase) => {
 };
 
 const printPurchase = (purchaseId) => {
-    window.open(route('purchase.pdf', purchaseId), '_blank');
+    window.open(route("purchase.pdf", purchaseId), "_blank");
 };
 </script>
 
@@ -71,18 +71,34 @@ const printPurchase = (purchaseId) => {
                     <FwbTableHeadCell>
                         <span class="sr-only">Imprimir</span>
                     </FwbTableHeadCell>
+                    <FwbTableHeadCell>
+                        <span class="sr-only">Eliminar</span>
+                    </FwbTableHeadCell>
                 </FwbTableHead>
                 <FwbTableBody>
                     <FwbTableRow
                         v-for="purchase in purchases.data"
                         :key="purchase.id"
                     >
-                        <FwbTableCell>{{ purchase.purchase_date }}</FwbTableCell>
-                        <FwbTableCell>{{ purchase.total_amount }} Bs</FwbTableCell>
-                        <FwbTableCell>{{ new Date(purchase.updated_at).toISOString().slice(0, 19).replace('T', ' ') }}</FwbTableCell>
+                        <FwbTableCell>{{
+                            purchase.purchase_date
+                        }}</FwbTableCell>
+                        <FwbTableCell
+                            >{{ purchase.total_amount }} Bs</FwbTableCell
+                        >
+                        <FwbTableCell>{{
+                            new Date(purchase.updated_at)
+                                .toISOString()
+                                .slice(0, 19)
+                                .replace("T", " ")
+                        }}</FwbTableCell>
                         <FwbTableCell class="flex justify-end gap-x-4">
                             <FwbButton
-                                @click="router.get(route('purchase.show', purchase.id))"
+                                @click="
+                                    router.get(
+                                        route('purchase.show', purchase.id)
+                                    )
+                                "
                                 color="alternative"
                                 square
                             >
@@ -90,7 +106,11 @@ const printPurchase = (purchaseId) => {
                                 <span class="hidden lg:inline">Ver</span>
                             </FwbButton>
                             <FwbButton
-                                @click="router.get(route('purchase.edit', purchase.id))"
+                                @click="
+                                    router.get(
+                                        route('purchase.edit', purchase.id)
+                                    )
+                                "
                                 color="alternative"
                                 square
                             >
@@ -104,6 +124,18 @@ const printPurchase = (purchaseId) => {
                             >
                                 <i class="fa-solid fa-print lg:mr-2" />
                                 <span class="hidden lg:inline">Imprimir</span>
+                            </FwbButton>
+                            <FwbButton
+                                @click="
+                                    router.delete(
+                                        route('purchase.destroy', purchase.id)
+                                    )
+                                "
+                                color="alternative"
+                                square
+                            >
+                                <i class="fa-solid fa-trash lg:mr-2"></i>
+                                <span class="hidden lg:inline">Eliminar</span>
                             </FwbButton>
                         </FwbTableCell>
                     </FwbTableRow>

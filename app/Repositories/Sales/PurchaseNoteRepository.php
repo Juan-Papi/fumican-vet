@@ -32,4 +32,10 @@ class PurchaseNoteRepository
     {
         return PurchaseNote::where('id', $id)->update($data);
     }
+
+
+    public function deleteById($id)
+    {
+        return PurchaseNote::where('id', $id)->delete();
+    }
 }
