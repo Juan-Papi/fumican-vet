@@ -43,38 +43,46 @@ class PurchaseNoteController extends Controller
         ]);
     }
 
-    public function store(StorePurchaseNoteRequest $request, InventoryService $inventoryService, PurchaseNoteDetailService $purchaseNoteDetailService)
-    {
+    public function store(
+        StorePurchaseNoteRequest $request,
+        InventoryService $inventoryService,
+        PurchaseNoteDetailService $purchaseNoteDetailService
+    ) {
         $data = $request->validated();
 
         DB::beginTransaction();
         try {
             $purchaseNoteData = [
-                'warehouse_id' => $data['warehouse_id'],
-                'supplier_id' => $data['supplier_id'],
-                'user_id' => Auth::user()->id,
-                'purchase_date' => now(),
-                'total_amount' => $data['total_amount'],
+                'warehouse_id'   => $data['warehouse_id'],
+                'supplier_id'    => $data['supplier_id'],
+                'user_id'        => Auth::user()->id,
+                'purchase_date'  => now(),
+                'total_amount'   => $data['total_amount'],
             ];
 
+            // 1) Crear la nota de compra
             $purchaseNote = $this->purchaseNoteService->createPurchaseNote($purchaseNoteData);
 
-            foreach ($data['medicaments'] as $medicament) {
+            // 2) Recorrer cada medicamento y crear detalle + asignar inventario
+            foreach ($data['medicaments'] as $medInput) {
+                // 2.1) Crear el PurchaseNoteDetail
                 $purchaseNoteDetailData = [
-                    'quantity' => $medicament['quantity'],
-                    'purchase_price' => $medicament['purchase_price'],
-                    'percentage' => 0,
-                    'subtotal' => $medicament['subtotal'],
+                    'quantity'         => $medInput['quantity'],
+                    'purchase_price'   => $medInput['purchase_price'],
+                    'percentage'       => 0,
+                    'subtotal'         => $medInput['subtotal'],
                     'purchase_note_id' => $purchaseNote->id,
-                    'medicament_id' => $medicament['id'],
+                    'medicament_id'    => $medInput['id'],
                 ];
-                $purchaseNoteDetailService->createPurchaseNoteDetail($purchaseNoteDetailData);
+                $detail = $purchaseNoteDetailService->createPurchaseNoteDetail($purchaseNoteDetailData);
 
+                // 2.2) Crear el inventario relacionándolo con el detail recién creado
                 $inventoryData = [
-                    'stock' => $medicament['quantity'],
-                    'price' => $medicament['purchase_price'],
-                    'warehouse_id' => $data['warehouse_id'],
-                    'medicament_id' => $medicament['id'],
+                    'stock'                   => $medInput['quantity'],
+                    'price'                   => $medInput['purchase_price'],
+                    'warehouse_id'            => $data['warehouse_id'],
+                    'medicament_id'           => $medInput['id'],
+                    'purchase_note_detail_id' => $detail->id,
                 ];
                 $inventoryService->createInventory($inventoryData);
             }
@@ -124,69 +132,114 @@ class PurchaseNoteController extends Controller
         ]);
     }
 
-    public function update(UpdatePurchaseNoteRequest $request, $id, InventoryService $inventoryService, PurchaseNoteDetailService $purchaseNoteDetailService)
-    {
+    public function update(
+        UpdatePurchaseNoteRequest $request,
+        $id,
+        InventoryService $inventoryService,
+        PurchaseNoteDetailService $purchaseNoteDetailService
+    ) {
         $data = $request->validated();
 
         DB::beginTransaction();
         try {
-            // Obtener la nota de compra original
+            // 1) Obtener la nota de compra original
             $originalPurchaseNote = $this->purchaseNoteService->getPurchaseNoteById($id);
             $originalWarehouseId = $originalPurchaseNote->warehouse_id;
 
+            // 2) Actualizar datos generales de la nota de compra
             $purchaseNoteData = [
                 'warehouse_id' => $data['warehouse_id'],
-                'supplier_id' => $data['supplier_id'],
+                'supplier_id'  => $data['supplier_id'],
                 'total_amount' => $data['total_amount'],
             ];
-
             $this->purchaseNoteService->updatePurchaseNote($id, $purchaseNoteData);
 
-            // Obtener los detalles existentes de la nota de compra
+            // 3) Obtener los detalles existentes y mapearlos por ID
             $existingDetails = $purchaseNoteDetailService->getPurchaseNoteDetailsByPurchaseNoteId($id);
-            $existingDetailsMap = $existingDetails->keyBy('id');
+            // $existingDetails es una colección de PurchaseNoteDetail (con medicament incluido si definimos with('medicament'))
+            $existingDetailsMap = $existingDetails->keyBy('id')->toArray();
+            $existingDetailIds = array_keys($existingDetailsMap);
 
-            // Eliminar inventarios asociados a los medicamentos eliminados
-            $existingDetailIds = $existingDetails->pluck('id')->toArray();
-            $newDetailIds = array_column($data['medicaments'], 'id');
-            $detailsToDelete = array_diff($existingDetailIds, $newDetailIds);
+            // 4) Extraer los IDs que vienen del front (los medInput['id'] no son IDs de detalle,
+            //    sino IDs de medicamento. Debemos asumir que, en el arreglo de front, hay un campo detail_id si es edición.)
+            //    Por ejemplo, recomendamos que en el front capturemos para cada medicament algo como:
+            //      { detail_id: 123, id: 5, quantity: 10, purchase_price: 20, subtotal: 200 }
+            //    Si no tienen 'detail_id', entonces debemos distinguir existencia por posición u otro criterio.
+            //
+            //    Aquí asumiremos que el front envía un campo `detail_id` cuando es un detalle existente.
+            //    De no ser así, habría que buscar de otra forma (p.ej. comparar medicament_id y demás).
+
+            $sentDetailsRaw = $data['medicaments'];
+            // Extraemos los detail_id que vienen del front:
+            $sentDetailIds = array_filter(array_map(function ($d) {
+                return $d['detail_id'] ?? null;
+            }, $sentDetailsRaw));
+
+            // 5) DELETED: detectar detalles que ya no existen en $sentDetailIds y borrar sus inventarios y detalles
+            $detailsToDelete = array_diff($existingDetailIds, $sentDetailIds);
             foreach ($detailsToDelete as $detailId) {
-                $detail = $existingDetailsMap[$detailId];
-                $inventoryService->deleteInventoriesByMedicamentAndWarehouse($detail->medicament_id, $originalWarehouseId);
+                // 5.1) Borrar inventario correspondiente a ese detalle
+                $inventoryService->deleteByPurchaseNoteDetailId($detailId);
+
+                // 5.2) Borrar el detalle de la nota
                 $purchaseNoteDetailService->deleteById($detailId);
             }
 
-            // Actualizar o crear detalles de la nota de compra e inventarios
-            foreach ($data['medicaments'] as $medicament) {
-                $purchaseNoteDetailData = [
-                    'quantity' => $medicament['quantity'],
-                    'purchase_price' => $medicament['purchase_price'],
-                    'percentage' => 0,
-                    'subtotal' => $medicament['subtotal'],
-                    'purchase_note_id' => $id,
-                    'medicament_id' => $medicament['id'],
-                ];
+            // 6) Procesar cada detalle enviado desde el front
+            foreach ($sentDetailsRaw as $medInput) {
+                // Determinar si es EXISTENTE o NUEVO:
+                if (isset($medInput['detail_id']) && in_array($medInput['detail_id'], $existingDetailIds)) {
+                    // ---- EXISTENTE: actualizar PurchaseNoteDetail + su inventario ----
+                    $detailId = $medInput['detail_id'];
 
-                if (isset($medicament['id']) && isset($existingDetailsMap[$medicament['id']])) {
-                    // Actualizar detalle existente
-                    $purchaseNoteDetailService->updatePurchaseNoteDetail($medicament['id'], $purchaseNoteDetailData);
+                    // 6.1) Actualizar PurchaseNoteDetail
+                    $purchaseNoteDetailData = [
+                        'quantity'         => $medInput['quantity'],
+                        'purchase_price'   => $medInput['purchase_price'],
+                        'percentage'       => 0,
+                        'subtotal'         => $medInput['subtotal'],
+                        'purchase_note_id' => $id,
+                        'medicament_id'    => $medInput['id'],
+                    ];
+                    $purchaseNoteDetailService->updatePurchaseNoteDetail($detailId, $purchaseNoteDetailData);
+
+                    // 6.2) Actualizar inventario (si existe) o crearlo
+                    $existingInventory = $inventoryService->getInventoryByPurchaseNoteDetailId($detailId);
+
+                    $inventoryData = [
+                        'stock'                   => $medInput['quantity'],
+                        'price'                   => $medInput['purchase_price'],
+                        'warehouse_id'            => $data['warehouse_id'],
+                        'medicament_id'           => $medInput['id'],
+                        'purchase_note_detail_id' => $detailId,
+                    ];
+
+                    if ($existingInventory) {
+                        // Actualizar usando su ID
+                        $inventoryService->updateInventory($existingInventory->id, $inventoryData);
+                    } else {
+                        // Crear uno nuevo (tal vez cambió de almacén o no existía antes)
+                        $inventoryService->createInventory($inventoryData);
+                    }
                 } else {
-                    // Crear nuevo detalle
-                    $purchaseNoteDetailService->createPurchaseNoteDetail($purchaseNoteDetailData);
-                }
+                    // ---- NUEVO: crear PurchaseNoteDetail + inventario ----
+                    $purchaseNoteDetailData = [
+                        'quantity'         => $medInput['quantity'],
+                        'purchase_price'   => $medInput['purchase_price'],
+                        'percentage'       => 0,
+                        'subtotal'         => $medInput['subtotal'],
+                        'purchase_note_id' => $id,
+                        'medicament_id'    => $medInput['id'],
+                    ];
+                    $newDetail = $purchaseNoteDetailService->createPurchaseNoteDetail($purchaseNoteDetailData);
 
-                $inventoryData = [
-                    'stock' => $medicament['quantity'],
-                    'price' => $medicament['purchase_price'],
-                    'warehouse_id' => $data['warehouse_id'],
-                    'medicament_id' => $medicament['id'],
-                ];
-
-                if (isset($medicament['id']) && isset($existingDetailsMap[$medicament['id']])) {
-                    // Actualizar inventario existente
-                    $inventoryService->updateInventory($existingDetailsMap[$medicament['id']]->inventory_id, $inventoryData);
-                } else {
-                    // Crear nuevo inventario
+                    $inventoryData = [
+                        'stock'                   => $medInput['quantity'],
+                        'price'                   => $medInput['purchase_price'],
+                        'warehouse_id'            => $data['warehouse_id'],
+                        'medicament_id'           => $medInput['id'],
+                        'purchase_note_detail_id' => $newDetail->id,
+                    ];
                     $inventoryService->createInventory($inventoryData);
                 }
             }
@@ -203,21 +256,29 @@ class PurchaseNoteController extends Controller
     {
         DB::beginTransaction();
         try {
-            $purchaseNote = $this->purchaseNoteService->getPurchaseNoteById($id);
-            $purchaseNoteDetails = $this->purchaseNoteDetailService->getPurchaseNoteDetailsByPurchaseNoteId($id);
+            // 1) Obtener todos los detalles de la nota de compra
+            $purchaseNoteDetails = $this->purchaseNoteDetailService
+                ->getPurchaseNoteDetailsByPurchaseNoteId($id);
 
+            // 2) Para cada detail, borrar primero su inventario y luego el detail
             foreach ($purchaseNoteDetails as $detail) {
-                $this->inventoryService->deleteInventoriesByMedicamentAndWarehouse($detail->medicament_id, $purchaseNote->warehouse->id);
+                // Borra el inventario asociado a este detail
+                $this->inventoryService->deleteByPurchaseNoteDetailId($detail->id);
+
+                // Borra el PurchaseNoteDetail
                 $this->purchaseNoteDetailService->deleteById($detail->id);
             }
 
+            // 3) Finalmente, borrar la propia nota de compra
             $this->purchaseNoteService->deletePurchaseNoteById($id);
 
             DB::commit();
-            return redirect()->route('purchase.index')->with('success', 'Nota de compra eliminada exitosamente');
+            return redirect()->route('purchase.index')
+                ->with('success', 'Nota de compra eliminada exitosamente');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Error al eliminar la nota de compra: ' . $e->getMessage()]);
+            return redirect()->back()
+                ->withErrors(['error' => 'Error al eliminar la nota de compra: ' . $e->getMessage()]);
         }
     }
 }

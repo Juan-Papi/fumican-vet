@@ -52,4 +52,14 @@ class InventoryService
     {
         return $this->inventoryRepository->deleteByMedicamentAndWarehouse($medicamentId, $warehouseId);
     }
+
+    public function getInventoryByPurchaseNoteDetailId(int $purchaseNoteDetailId)
+    {
+        return $this->inventoryRepository->findByPurchaseNoteDetailId($purchaseNoteDetailId);
+    }
+
+    public function deleteByPurchaseNoteDetailId(int $purchaseNoteDetailId)
+    {
+        return $this->inventoryRepository->deleteByPurchaseNoteDetailId($purchaseNoteDetailId);
+    }
 }

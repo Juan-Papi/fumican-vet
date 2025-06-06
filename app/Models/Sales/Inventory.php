@@ -20,6 +20,7 @@ class Inventory extends Model
         'price',
         'warehouse_id',
         'medicament_id',
+        'purchase_note_detail_id',
     ];
 
     public function warehouse()
@@ -30,5 +31,10 @@ class Inventory extends Model
     public function medicament()
     {
         return $this->belongsTo(Medicament::class);
+    }
+
+    public function purchaseNoteDetail()
+    {
+        return $this->belongsTo(PurchaseNoteDetail::class);
     }
 }

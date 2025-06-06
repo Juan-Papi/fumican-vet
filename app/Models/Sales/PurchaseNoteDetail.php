@@ -33,4 +33,9 @@ class PurchaseNoteDetail extends Model
     {
         return $this->belongsTo(Medicament::class);
     }
+
+    public function inventory()
+    {
+        return $this->hasOne(Inventory::class, 'purchase_note_detail_id');
+    }
 }

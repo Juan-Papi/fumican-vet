@@ -65,4 +65,14 @@ class InventoryRepository
             ->where('warehouse_id', $warehouseId)
             ->delete();
     }
+
+    public function findByPurchaseNoteDetailId(int $purchaseNoteDetailId)
+    {
+        return Inventory::where('purchase_note_detail_id', $purchaseNoteDetailId)->first();
+    }
+
+    public function deleteByPurchaseNoteDetailId(int $purchaseNoteDetailId)
+    {
+        return Inventory::where('purchase_note_detail_id', $purchaseNoteDetailId)->delete();
+    }
 }

@@ -23,6 +23,7 @@ const form = ref({
     warehouse_id: props.purchaseNote.warehouse_id,
 
     medicaments: props.purchaseNoteDetails.map(detail => ({
+        detail_id: detail.id,
         id: detail.medicament_id,
         quantity: detail.quantity,
         purchase_price: detail.purchase_price,
