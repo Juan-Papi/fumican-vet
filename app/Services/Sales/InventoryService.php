@@ -2,6 +2,7 @@
 
 namespace App\Services\Sales;
 
+use App\Models\Sales\Inventory;
 use App\Repositories\Sales\InventoryRepository;
 
 class InventoryService
@@ -61,5 +62,55 @@ class InventoryService
     public function deleteByPurchaseNoteDetailId(int $purchaseNoteDetailId)
     {
         return $this->inventoryRepository->deleteByPurchaseNoteDetailId($purchaseNoteDetailId);
+    }
+
+    public function updateInventoryStock($inventoryId, $quantitySold)
+    {
+        return $this->inventoryRepository->updateInventoryStock($inventoryId, $quantitySold);
+    }
+
+    public function restoreInventoryStock($inventoryId, $quantityRestored)
+    {
+        return $this->inventoryRepository->restoreInventoryStock($inventoryId, $quantityRestored);
+    }
+
+    public function getByMedicamentAndWarehouse(int $medId, int $warehouseId)
+    {
+        return $this->inventoryRepository
+            ->findByMedicamentAndWarehouse($warehouseId, $medId)
+            ->first();
+    }
+
+    public function adjustStock(int $inventoryId, int $delta)
+    {
+        $inv = $this->inventoryRepository->findById($inventoryId);
+        $inv->stock += $delta;
+        $inv->save();
+    }
+
+    public function consumeStock(int $warehouseId, int $medicamentId, int $quantity): void
+    {
+        // 1. Traer los lotes disponibles, en orden de ingreso (created_at asc)
+        $lots = Inventory::where('warehouse_id', $warehouseId)
+            ->where('medicament_id', $medicamentId)
+            ->where('stock', '>', 0)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $remaining = $quantity;
+
+        foreach ($lots as $lot) {
+            if ($remaining <= 0) break;
+
+            $toTake = min($lot->stock, $remaining);
+            $lot->stock -= $toTake;
+            $lot->save();
+
+            $remaining -= $toTake;
+        }
+
+        if ($remaining > 0) {
+            throw new \Exception("Stock insuficiente para el medicamento $medicamentId");
+        }
     }
 }

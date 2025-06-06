@@ -21,6 +21,8 @@ return new class extends Migration
             $table->foreign('medicament_id')->references('id')->on('medicaments');
             $table->unsignedBigInteger('purchase_note_detail_id')->nullable();
             $table->foreign('purchase_note_detail_id')->references('id')->on('purchase_note_details');
+            $table->unsignedBigInteger('sales_note_detail_id')->nullable();
+            $table->foreign('sales_note_detail_id')->references('id')->on('sales_note_details');
             $table->timestamps();
         });
     }

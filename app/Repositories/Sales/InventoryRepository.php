@@ -75,4 +75,24 @@ class InventoryRepository
     {
         return Inventory::where('purchase_note_detail_id', $purchaseNoteDetailId)->delete();
     }
+
+    public function updateInventoryStock($inventoryId, $quantitySold)
+    {
+        $inventory = Inventory::findOrFail($inventoryId);
+        $inventory->stock -= $quantitySold;
+        $inventory->save();
+    }
+
+    public function restoreInventoryStock($inventoryId, $quantityRestored)
+    {
+        $inventory = Inventory::findOrFail($inventoryId);
+        $inventory->stock += $quantityRestored;
+        $inventory->save();
+    }
+
+    public function findByMedicamentAndWarehouse(int $warehouseId, int $medicamentId)
+    {
+        return Inventory::where('warehouse_id', $warehouseId)
+            ->where('medicament_id', $medicamentId);
+    }
 }

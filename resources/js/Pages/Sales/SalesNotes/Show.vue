@@ -38,14 +38,18 @@ const salesNoteDetails = ref(props.salesNoteDetails);
                         <strong>Almacén:</strong> {{ salesNote.warehouse.name }}
                     </p>
                     <p>
-                        <strong>Cliente:</strong> {{ salesNote.customer.first_name }} {{ salesNote.customer.last_name }}
+                        <strong>Cliente:</strong>
+                        {{ salesNote.customer.first_name }}
+                        {{ salesNote.customer.last_name }}
                     </p>
                     <p>
                         <strong>Usuario:</strong>
-                        {{ salesNote.user.first_name }} {{ salesNote.user.last_name }}
+                        {{ salesNote.user.first_name }}
+                        {{ salesNote.user.last_name }}
                     </p>
                     <p>
-                        <strong>Fecha de Venta:</strong> {{ salesNote.sale_date }}
+                        <strong>Fecha de Venta:</strong>
+                        {{ salesNote.sale_date }}
                     </p>
                     <p>
                         <strong>Total:</strong> {{ salesNote.total_amount }} Bs
@@ -73,10 +77,12 @@ const salesNoteDetails = ref(props.salesNoteDetails);
                                 detail.medicament.name
                             }}</FwbTableCell>
                             <FwbTableCell>{{ detail.quantity }}</FwbTableCell>
-                            <FwbTableCell>{{
-                                detail.sale_price
-                            }} Bs</FwbTableCell>
-                            <FwbTableCell>{{ detail.subtotal }} Bs</FwbTableCell>
+                            <FwbTableCell
+                                >{{ detail.sale_price }} Bs</FwbTableCell
+                            >
+                            <FwbTableCell
+                                >{{ detail.subtotal }} Bs</FwbTableCell
+                            >
                             <FwbTableCell></FwbTableCell>
                         </FwbTableRow>
                     </FwbTableBody>
