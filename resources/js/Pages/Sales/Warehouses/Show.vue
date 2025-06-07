@@ -41,8 +41,22 @@ watch(currentPage, (newPage) => {
             <FwbButton
                 :href="route('warehouse.index')"
                 type="button"
-                color="purple"
+                color="yellow"
             >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="inline w-4 h-4 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                    />
+                </svg>
                 Volver a Almacenes
             </FwbButton>
         </div>

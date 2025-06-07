@@ -37,6 +37,7 @@ watch(currentPage, (newPage) => {
                 type="button"
                 color="purple"
             >
+                <i class="fa-solid fa-plus"></i>
                 Agregar medicamento
             </FwbButton>
         </div>
@@ -51,7 +52,7 @@ watch(currentPage, (newPage) => {
                     <FwbTableHeadCell>Categoría</FwbTableHeadCell>
                     <FwbTableHeadCell>Última modificación</FwbTableHeadCell>
                     <FwbTableHeadCell>
-                        <span class="sr-only">Editar</span>
+                        <span class="sr-only">Acciones</span>
                     </FwbTableHeadCell>
                 </FwbTableHead>
                 <FwbTableBody>
@@ -61,23 +62,50 @@ watch(currentPage, (newPage) => {
                     >
                         <FwbTableCell>{{ medicament.name }}</FwbTableCell>
                         <FwbTableCell>{{ medicament.dosage }}</FwbTableCell>
-                        <FwbTableCell>{{ medicament.manufacturer }}</FwbTableCell>
+                        <FwbTableCell>{{
+                            medicament.manufacturer
+                        }}</FwbTableCell>
                         <FwbTableCell>
                             {{ medicament.expiration_date }}
                         </FwbTableCell>
                         <FwbTableCell>
-                            {{ medicament.controlled_substance === 'yes' ? 'Sí' : 'No' }}
+                            {{
+                                medicament.controlled_substance === "yes"
+                                    ? "Sí"
+                                    : "No"
+                            }}
                         </FwbTableCell>
                         <FwbTableCell>
                             {{ medicament.category.name }}
                         </FwbTableCell>
                         <FwbTableCell>{{ medicament.updated_at }}</FwbTableCell>
                         <FwbTableCell>
-                            <FwbA
-                                :href="route('medicament.edit', medicament.id)"
-                            >
-                                Editar
-                            </FwbA>
+                            <div class="flex space-x-2">
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-eye text-black hover:text-blue-600"
+                                    />
+                                </FwbA>
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-pencil text-black hover:text-blue-600"
+                                    />
+                                </FwbA>
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-trash text-black hover:text-blue-600"
+                                    ></i>
+                                </FwbA>
+                            </div>
                         </FwbTableCell>
                     </FwbTableRow>
                 </FwbTableBody>

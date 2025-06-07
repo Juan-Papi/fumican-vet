@@ -38,7 +38,9 @@ watch(currentPage, (newPage) => {
                 :href="route('warehouse.create')"
                 type="button"
                 color="purple"
+                class="flex items-center gap-2"
             >
+                <i class="fa-solid fa-plus"></i>
                 Agregar Almacén
             </FwbButton>
         </div>

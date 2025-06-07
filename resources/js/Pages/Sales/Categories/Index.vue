@@ -37,6 +37,7 @@ watch(currentPage, (newPage) => {
                 type="button"
                 color="purple"
             >
+                <i class="fa-solid fa-plus"></i>
                 Agregar categoría
             </FwbButton>
         </div>
@@ -46,7 +47,7 @@ watch(currentPage, (newPage) => {
                     <FwbTableHeadCell>Nombre</FwbTableHeadCell>
                     <FwbTableHeadCell>Última modificación</FwbTableHeadCell>
                     <FwbTableHeadCell>
-                        <span class="sr-only">Editar</span>
+                        <span class="sr-only">Acciones</span>
                     </FwbTableHeadCell>
                 </FwbTableHead>
                 <FwbTableBody>
@@ -56,10 +57,43 @@ watch(currentPage, (newPage) => {
                     >
                         <FwbTableCell>{{ category.name }}</FwbTableCell>
                         <FwbTableCell>{{ category.updated_at }}</FwbTableCell>
-                        <FwbTableCell>
-                            <FwbA :href="route('category.edit', category.id)">
-                                Editar
-                            </FwbA>
+                        <FwbTableCell class="flex justify-end gap-x-3">
+                            <FwbButton
+                                @click="
+                                    router.get(
+                                        route('purchase.show', purchase.id)
+                                    )
+                                "
+                                color="alternative"
+                                square
+                            >
+                                <i class="fa-solid fa-eye lg:mr-2" />
+                                <span class="hidden lg:inline">Ver</span>
+                            </FwbButton>
+                            <FwbButton
+                                @click="
+                                    router.get(
+                                        route('purchase.edit', purchase.id)
+                                    )
+                                "
+                                color="alternative"
+                                square
+                            >
+                                <i class="fa-solid fa-pencil lg:mr-2" />
+                                <span class="hidden lg:inline">Editar</span>
+                            </FwbButton>
+                            <FwbButton
+                                @click="
+                                    router.delete(
+                                        route('purchase.destroy', purchase.id)
+                                    )
+                                "
+                                color="alternative"
+                                square
+                            >
+                                <i class="fa-solid fa-trash lg:mr-2"></i>
+                                <span class="hidden lg:inline">Eliminar</span>
+                            </FwbButton>
                         </FwbTableCell>
                     </FwbTableRow>
                 </FwbTableBody>

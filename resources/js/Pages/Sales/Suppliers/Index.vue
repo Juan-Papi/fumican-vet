@@ -37,6 +37,7 @@ watch(currentPage, (newPage) => {
                 type="button"
                 color="purple"
             >
+                <i class="fa-solid fa-plus"></i>
                 Agregar proveedor
             </FwbButton>
         </div>
@@ -48,9 +49,8 @@ watch(currentPage, (newPage) => {
                     <FwbTableHeadCell>Teléfono</FwbTableHeadCell>
                     <FwbTableHeadCell>Email</FwbTableHeadCell>
                     <FwbTableHeadCell>Dirección</FwbTableHeadCell>
-                    <FwbTableHeadCell>Última modificación</FwbTableHeadCell>
                     <FwbTableHeadCell>
-                        <span class="sr-only">Editar</span>
+                        <span class="sr-only">Acciones</span>
                     </FwbTableHeadCell>
                 </FwbTableHead>
                 <FwbTableBody>
@@ -63,11 +63,38 @@ watch(currentPage, (newPage) => {
                         <FwbTableCell>{{ supplier.phoneNumber }}</FwbTableCell>
                         <FwbTableCell>{{ supplier.email }}</FwbTableCell>
                         <FwbTableCell>{{ supplier.address }}</FwbTableCell>
-                        <FwbTableCell>{{ supplier.updated_at }}</FwbTableCell>
-                        <FwbTableCell>
+                        <!-- <FwbTableCell>
                             <FwbA :href="route('supplier.edit', supplier.id)">
                                 Editar
                             </FwbA>
+                        </FwbTableCell> -->
+                        <FwbTableCell>
+                            <div class="flex space-x-2">
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-eye text-black hover:text-blue-600"
+                                    />
+                                </FwbA>
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-pencil text-black hover:text-blue-600"
+                                    />
+                                </FwbA>
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-trash text-black hover:text-blue-600"
+                                    ></i>
+                                </FwbA>
+                            </div>
                         </FwbTableCell>
                     </FwbTableRow>
                 </FwbTableBody>

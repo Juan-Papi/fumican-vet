@@ -41,17 +41,42 @@ console.log(props.inventories);
     <AdminLayout :title="`Inventarios de ${props.warehouse.name}`">
         <div class="flex justify-between my-6">
             <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
-                Inventarios de {{ props.warehouse.name }}
+                Inventarios (Lotes de medicamento) de
+                {{ props.warehouse.name }}
             </h2>
+            <FwbButton
+                :href="route('warehouse.create')"
+                type="button"
+                color="purple"
+                class="flex items-center gap-2"
+            >
+                <i class="fa-solid fa-plus"></i>
+                Agregar nuevo lote
+            </FwbButton>
+        </div>
+        <div class="h-12">
             <FwbButton
                 :href="route('warehouse.show', props.warehouse.id)"
                 type="button"
-                color="purple"
+                color="yellow"
             >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="inline w-4 h-4 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                    />
+                </svg>
                 Volver a Almacén
             </FwbButton>
         </div>
-
         <div v-if="props.inventories && props.inventories.data.length > 0">
             <FwbTable>
                 <FwbTableHead>
@@ -60,7 +85,7 @@ console.log(props.inventories);
                     <FwbTableHeadCell>Precio</FwbTableHeadCell>
                     <FwbTableHeadCell>Almacén</FwbTableHeadCell>
                     <FwbTableHeadCell>
-                        <span class="sr-only">Edit</span>
+                        <span class="sr-only">Acciones</span>
                     </FwbTableHeadCell>
                 </FwbTableHead>
                 <FwbTableBody>
@@ -79,14 +104,39 @@ console.log(props.inventories);
                             {{ inventory.warehouse.name }}
                         </FwbTableCell>
                         <FwbTableCell>
-                            <FwbA href="#" class="hover:underline"> Edit </FwbA>
+                            <div class="flex space-x-2">
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-eye text-black hover:text-blue-600"
+                                    />
+                                </FwbA>
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-pencil text-black hover:text-blue-600"
+                                    />
+                                </FwbA>
+                                <FwbA
+                                    href="#"
+                                    class="p-1 hover:bg-gray-100 rounded"
+                                >
+                                    <i
+                                        class="fa-solid fa-trash text-black hover:text-blue-600"
+                                    ></i>
+                                </FwbA>
+                            </div>
                         </FwbTableCell>
                     </FwbTableRow>
                 </FwbTableBody>
             </FwbTable>
         </div>
         <div v-else>
-            <p>No hay inventarios para este almacén.</p>
+            <p>No hay inventarios (Lotes de medicamento) para este almacén.</p>
         </div>
         <div class="flex justify-center my-4">
             <FwbPagination

@@ -25,8 +25,22 @@ const purchaseNoteDetails = ref(props.purchaseNoteDetails);
             </h2>
             <FwbButton
                 @click="$inertia.get(route('purchase.index'))"
-                color="purple"
+                color="yellow"
             >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="inline w-4 h-4 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                    />
+                </svg>
                 Volver a la lista
             </FwbButton>
         </div>
@@ -35,20 +49,25 @@ const purchaseNoteDetails = ref(props.purchaseNoteDetails);
                 <h3 class="text-lg font-semibold mb-2">Información General</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <p>
-                        <strong>Almacén:</strong> {{ purchaseNote.warehouse.name }}
+                        <strong>Almacén:</strong>
+                        {{ purchaseNote.warehouse.name }}
                     </p>
                     <p>
-                        <strong>Proveedor:</strong> {{ purchaseNote.supplier.name }}
+                        <strong>Proveedor:</strong>
+                        {{ purchaseNote.supplier.name }}
                     </p>
                     <p>
                         <strong>Usuario:</strong>
-                        {{ purchaseNote.user.first_name }} {{ purchaseNote.user.last_name }}
+                        {{ purchaseNote.user.first_name }}
+                        {{ purchaseNote.user.last_name }}
                     </p>
                     <p>
-                        <strong>Fecha de Compra:</strong> {{ purchaseNote.purchase_date }}
+                        <strong>Fecha de Compra:</strong>
+                        {{ purchaseNote.purchase_date }}
                     </p>
                     <p>
-                        <strong>Total:</strong> {{ purchaseNote.total_amount }} Bs
+                        <strong>Total:</strong>
+                        {{ purchaseNote.total_amount }} Bs
                     </p>
                 </div>
             </div>
@@ -73,10 +92,12 @@ const purchaseNoteDetails = ref(props.purchaseNoteDetails);
                                 detail.medicament.name
                             }}</FwbTableCell>
                             <FwbTableCell>{{ detail.quantity }}</FwbTableCell>
-                            <FwbTableCell>{{
-                                detail.purchase_price
-                            }} Bs</FwbTableCell>
-                            <FwbTableCell>{{ detail.subtotal }} Bs</FwbTableCell>
+                            <FwbTableCell
+                                >{{ detail.purchase_price }} Bs</FwbTableCell
+                            >
+                            <FwbTableCell
+                                >{{ detail.subtotal }} Bs</FwbTableCell
+                            >
                             <FwbTableCell></FwbTableCell>
                         </FwbTableRow>
                     </FwbTableBody>
