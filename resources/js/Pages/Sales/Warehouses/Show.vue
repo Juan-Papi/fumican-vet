@@ -61,21 +61,22 @@ watch(currentPage, (newPage) => {
                         v-for="(inventory, index) in props.inventories"
                         :key="index"
                     >
-                        <FwbTableCell>{{ inventory.medicament.name }}</FwbTableCell>
+                        <FwbTableCell>{{
+                            inventory.medicament.name
+                        }}</FwbTableCell>
                         <FwbTableCell>{{ inventory.total_stock }}</FwbTableCell>
                         <FwbTableCell>
                             <FwbA
                                 :href="
-                                    route(
-                                        'warehouse.medicament.inventory',
-                                        {
-                                            warehouseId: props.warehouse.id,
-                                            medicamentId: inventory.medicament.id,
-                                        }
-                                    )
+                                    route('warehouse.medicament.inventory', {
+                                        warehouseId: props.warehouse.id,
+                                        medicamentId: inventory.medicament.id,
+                                    })
                                 "
                             >
-                                Ver
+                                <i
+                                    class="fa-solid fa-eye lg:mr-2 text-black hover:text-blue-600"
+                                />
                             </FwbA>
                         </FwbTableCell>
                     </FwbTableRow>

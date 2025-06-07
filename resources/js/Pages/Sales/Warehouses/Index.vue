@@ -53,7 +53,10 @@ watch(currentPage, (newPage) => {
                         <span class="sr-only">Ver</span>
                     </FwbTableHeadCell>
                     <FwbTableHeadCell>
-                        <span class="sr-only">Edit</span>
+                        <span class="sr-only">Editar</span>
+                    </FwbTableHeadCell>
+                    <FwbTableHeadCell>
+                        <span class="sr-only">Eliminar</span>
                     </FwbTableHeadCell>
                 </FwbTableHead>
                 <FwbTableBody>
@@ -68,10 +71,20 @@ watch(currentPage, (newPage) => {
                         }}</FwbTableCell>
                         <FwbTableCell>{{ warehouse.updated_at }}</FwbTableCell>
                         <FwbTableCell>
-                            <FwbA :href="route('warehouse.show', warehouse.id)"> Ver </FwbA>
+                            <FwbA :href="route('warehouse.show', warehouse.id)">
+                                <i class="fa-solid fa-eye lg:mr-2 text-black hover:text-blue-600" />
+                            </FwbA>
+                        </FwbTableCell>
+
+                        <FwbTableCell>
+                            <FwbA href="#">
+                                <i class="fa-solid fa-pencil lg:mr-2 text-black hover:text-blue-600" />
+                            </FwbA>
                         </FwbTableCell>
                         <FwbTableCell>
-                            <FwbA href="#"> Edit </FwbA>
+                            <FwbA href="#">
+                                <i class="fa-solid fa-trash lg:mr-2 text-black hover:text-blue-600"></i>
+                            </FwbA>
                         </FwbTableCell>
                     </FwbTableRow>
                 </FwbTableBody>
