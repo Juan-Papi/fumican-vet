@@ -3,6 +3,7 @@
 namespace App\Services\Sales;
 
 use App\Models\Sales\Inventory;
+use App\Models\Sales\StockMovement;
 use App\Repositories\Sales\InventoryRepository;
 
 class InventoryService
@@ -88,29 +89,45 @@ class InventoryService
         $inv->save();
     }
 
-    public function consumeStock(int $warehouseId, int $medicamentId, int $quantity): void
+    public function consumeStock(int $warehouseId, int $medicamentId, int $quantity, int $salesDetailId): void
     {
-        // 1. Traer los lotes disponibles, en orden de ingreso (created_at asc)
+        $remaining = $quantity;
         $lots = Inventory::where('warehouse_id', $warehouseId)
             ->where('medicament_id', $medicamentId)
             ->where('stock', '>', 0)
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $remaining = $quantity;
-
         foreach ($lots as $lot) {
             if ($remaining <= 0) break;
-
-            $toTake = min($lot->stock, $remaining);
-            $lot->stock -= $toTake;
+            $take = min($lot->stock, $remaining);
+            $lot->stock -= $take;
             $lot->save();
 
-            $remaining -= $toTake;
+            StockMovement::create([
+                'inventory_id'         => $lot->id,
+                'sales_note_detail_id' => $salesDetailId,
+                'quantity'             => -$take,
+            ]);
+
+            $remaining -= $take;
         }
 
         if ($remaining > 0) {
             throw new \Exception("Stock insuficiente para el medicamento $medicamentId");
         }
+    }
+
+    public function restoreStockForSalesDetail(int $salesDetailId): void
+    {
+        $movements = StockMovement::where('sales_note_detail_id', $salesDetailId)->get();
+        foreach ($movements as $mov) {
+            $lot = Inventory::find($mov->inventory_id);
+            if ($lot) {
+                $lot->stock += abs($mov->quantity);
+                $lot->save();
+            }
+        }
+        StockMovement::where('sales_note_detail_id', $salesDetailId)->delete();
     }
 }

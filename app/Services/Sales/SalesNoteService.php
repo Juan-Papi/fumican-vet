@@ -2,7 +2,6 @@
 
 namespace App\Services\Sales;
 
-use App\Models\Sales\Inventory;
 use App\Models\Sales\SalesNote;
 use App\Models\Sales\SalesNoteDetail;
 use App\Repositories\Sales\SalesNoteRepository;
@@ -47,9 +46,11 @@ class SalesNoteService
 
                 // 2.2) Consumir stock usando FIFO
                 $this->inventoryService->consumeStock(
-                    $salesNoteData['warehouse_id'],    // almacén
-                    $medicament['id'],                 // id de medicamento
-                    $medicament['quantity'],           // cantidad vendida
+                    $salesNoteData['warehouse_id'],
+                    $medicament['id'],
+                    $medicament['quantity'],
+                    $salesNoteDetail->id
+
                 );
             }
 
@@ -65,7 +66,6 @@ class SalesNoteService
     {
         DB::beginTransaction();
         try {
-            // 1) Actualizar datos de la nota
             $salesNote = SalesNote::findOrFail($id);
             $salesNote->update([
                 'customer_id'  => $data['customer_id'],
@@ -73,55 +73,27 @@ class SalesNoteService
                 'total_amount' => $data['total_amount'],
             ]);
 
-            // 2) Obtener detalles originales
-            $originalDetails = $salesNote->salesNoteDetails()->get()->keyBy('medicament_id');
-
-            // 3) Recorrer los medicaments enviados
-            foreach ($data['medicaments'] as $m) {
-                $medId = $m['id'];
-                $qty   = $m['quantity'];
-
-                if ($originalDetails->has($medId)) {
-                    // a) Ajuste de inventario: diferencia
-                    $diff = $qty - $originalDetails[$medId]->quantity;
-                    $inv = $this->inventoryService
-                        ->getByMedicamentAndWarehouse($medId, $salesNote->warehouse_id);
-                    if ($inv) {
-                        $this->inventoryService->adjustStock($inv->id, -$diff);
-                    }
-                    // b) Actualizar detalle
-                    $originalDetails[$medId]->update([
-                        'quantity'   => $qty,
-                        'sale_price' => $m['sale_price'],
-                        'subtotal'   => $m['subtotal'],
-                    ]);
-                    $originalDetails->forget($medId);
-                } else {
-                    // Detalle nuevo
-                    $newDetail = SalesNoteDetail::create([
-                        'sales_note_id' => $id,
-                        'medicament_id' => $medId,
-                        'quantity'      => $qty,
-                        'sale_price'    => $m['sale_price'],
-                        'subtotal'      => $m['subtotal'],
-                    ]);
-                    // Reducir inventario
-                    $inv = $this->inventoryService
-                        ->getByMedicamentAndWarehouse($medId, $salesNote->warehouse_id);
-                    if ($inv) {
-                        $this->inventoryService->adjustStock($inv->id, -$qty);
-                    }
-                }
+            // 1) Restaurar stock y borrar detalles viejos
+            foreach ($salesNote->salesNoteDetails as $old) {
+                $this->inventoryService->restoreStockForSalesDetail($old->id);
+                $old->delete();
             }
 
-            // 4) Los que quedaron en $originalDetails fueron eliminados en el form → restaurar stock y borrar
-            foreach ($originalDetails as $detail) {
-                $inv = $this->inventoryService
-                    ->getByMedicamentAndWarehouse($detail->medicament_id, $salesNote->warehouse_id);
-                if ($inv) {
-                    $this->inventoryService->adjustStock($inv->id, $detail->quantity);
-                }
-                $detail->delete();
+            // 2) Crear nuevos detalles y consumir stock FIFO
+            foreach ($data['medicaments'] as $m) {
+                $detail = SalesNoteDetail::create([
+                    'sales_note_id' => $id,
+                    'medicament_id' => $m['id'],
+                    'quantity'      => $m['quantity'],
+                    'sale_price'    => $m['sale_price'],
+                    'subtotal'      => $m['subtotal'],
+                ]);
+                $this->inventoryService->consumeStock(
+                    $salesNote->warehouse_id,
+                    $m['id'],
+                    $m['quantity'],
+                    $detail->id
+                );
             }
 
             DB::commit();

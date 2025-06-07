@@ -13,8 +13,6 @@ use App\Http\Requests\Sales\StoreSalesNoteRequest;
 use App\Http\Requests\Sales\UpdateSalesNoteRequest;
 use App\Models\Sales\Inventory;
 use App\Models\Sales\SalesNote;
-use App\Models\Sales\SalesNoteDetail;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
