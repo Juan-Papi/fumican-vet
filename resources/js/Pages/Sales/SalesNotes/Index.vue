@@ -25,7 +25,7 @@ watch(currentPage, (newPage) => {
 });
 
 const printSale = (saleId) => {
-    window.open(route('sales-note.pdf', saleId), '_blank');
+    window.open(route("sales-note.pdf", saleId), "_blank");
 };
 </script>
 
@@ -58,18 +58,27 @@ const printSale = (saleId) => {
                     <FwbTableHeadCell>
                         <span class="sr-only">Imprimir</span>
                     </FwbTableHeadCell>
+                    <FwbTableHeadCell>
+                        <span class="sr-only">Eliminar</span>
+                    </FwbTableHeadCell>
                 </FwbTableHead>
                 <FwbTableBody>
-                    <FwbTableRow
-                        v-for="sale in sales.data"
-                        :key="sale.id"
-                    >
+                    <FwbTableRow v-for="sale in sales.data" :key="sale.id">
                         <FwbTableCell>{{ sale.sale_date }}</FwbTableCell>
                         <FwbTableCell>{{ sale.total_amount }} Bs</FwbTableCell>
-                        <FwbTableCell>{{ new Date(sale.updated_at).toISOString().slice(0, 19).replace('T', ' ') }}</FwbTableCell>
+                        <FwbTableCell>{{
+                            new Date(sale.updated_at)
+                                .toISOString()
+                                .slice(0, 19)
+                                .replace("T", " ")
+                        }}</FwbTableCell>
                         <FwbTableCell class="flex justify-end gap-x-4">
                             <FwbButton
-                                @click="router.get(route('sales-note.show', sale.id))"
+                                @click="
+                                    router.get(
+                                        route('sales-note.show', sale.id)
+                                    )
+                                "
                                 color="alternative"
                                 square
                             >
@@ -77,7 +86,11 @@ const printSale = (saleId) => {
                                 <span class="hidden lg:inline">Ver</span>
                             </FwbButton>
                             <FwbButton
-                                @click="router.get(route('sales-note.edit', sale.id))"
+                                @click="
+                                    router.get(
+                                        route('sales-note.edit', sale.id)
+                                    )
+                                "
                                 color="alternative"
                                 square
                             >
@@ -91,6 +104,19 @@ const printSale = (saleId) => {
                             >
                                 <i class="fa-solid fa-print lg:mr-2" />
                                 <span class="hidden lg:inline">Imprimir</span>
+                            </FwbButton>
+
+                            <FwbButton
+                                @click="
+                                    router.delete(
+                                        route('sales-note.destroy', sale.id)
+                                    )
+                                "
+                                color="alternative"
+                                square
+                            >
+                                <i class="fa-solid fa-trash lg:mr-2"></i>
+                                <span class="hidden lg:inline">Eliminar</span>
                             </FwbButton>
                         </FwbTableCell>
                     </FwbTableRow>

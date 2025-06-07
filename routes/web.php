@@ -114,6 +114,7 @@ Route::middleware([
             Route::put('{id}', [SalesNoteController::class, 'update'])->name('sales-note.update');
             Route::get('{id}', [SalesNoteController::class, 'show'])->name('sales-note.show');
             Route::get('sales-note/{id}/pdf', [SalesNoteController::class, 'generatePdf'])->name('sales-note.pdf');
+            Route::delete('{id}', [SalesNoteController::class, 'destroy'])->name('sales-note.destroy');
         });
     });
 });

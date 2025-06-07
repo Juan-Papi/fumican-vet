@@ -11,7 +11,6 @@ use App\Services\Sales\InventoryService;
 use App\Services\Services\CustomerService;
 use App\Http\Requests\Sales\StoreSalesNoteRequest;
 use App\Http\Requests\Sales\UpdateSalesNoteRequest;
-use App\Models\Sales\Inventory;
 use App\Models\Sales\SalesNote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -117,30 +116,30 @@ class SalesNoteController extends Controller
     {
         DB::beginTransaction();
         try {
-            $salesNote = SalesNote::findOrFail($id);
+            // 1) Traer la nota de venta con sus detalles
+            $salesNote = SalesNote::with('salesNoteDetails')->findOrFail($id);
 
-            foreach ($salesNote->details as $detail) {
-                // Restaurar el inventario (sumar las unidades vendidas)
-                $inventory = Inventory::where('medicament_id', $detail->medicament_id)
-                    ->where('warehouse_id', $salesNote->warehouse_id)
-                    ->first();
+            // 2) Para cada detalle, restaurar el stock consumido y borrar el detalle
+            foreach ($salesNote->salesNoteDetails as $detail) {
+                // Restaura el stock lote-a-lote según lo que consumió ese detalle
+                $this->inventoryService->restoreStockForSalesDetail($detail->id);
 
-                if ($inventory) {
-                    $this->inventoryService->restoreInventoryStock($inventory->id, $detail->quantity);
-                }
-
-                // Eliminar los detalles de la venta
+                // Borra el detalle de la venta
                 $detail->delete();
             }
 
-            // Eliminar la nota de venta
+            // 3) Borrar la nota de venta
             $salesNote->delete();
 
             DB::commit();
-            return redirect()->route('sales-note.index')->with('success', 'Venta eliminada exitosamente');
+            return redirect()
+                ->route('sales-note.index')
+                ->with('success', 'Venta eliminada exitosamente');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Error al eliminar la venta: ' . $e->getMessage()]);
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'Error al eliminar la venta: ' . $e->getMessage()]);
         }
     }
 }
