@@ -287,6 +287,7 @@ console.log(props.inventories);
                                     ></i>
                                 </FwbA>
                                 <FwbA
+                                    v-if="inventory.purchase_note_detail_id === null"
                                     @click.prevent="openEditModal(inventory)"
                                     class="p-1 rounded hover:bg-gray-100"
                                 >
@@ -295,6 +296,7 @@ console.log(props.inventories);
                                     ></i>
                                 </FwbA>
                                 <FwbA
+                                    v-if="inventory.purchase_note_detail_id === null"
                                     @click.prevent="openDeleteModal(inventory)"
                                     class="p-1 hover:bg-gray-100 rounded"
                                 >
