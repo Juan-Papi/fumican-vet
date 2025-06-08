@@ -13,13 +13,15 @@ use Inertia\Inertia;
 class MedicamentController extends Controller
 {
 
-    public function __construct(protected MedicamentService $medicamentService) {}
+    public function __construct(protected MedicamentService $medicamentService, protected CategoryService $categoryService) {}
 
     public function index()
     {
         $medicaments = $this->medicamentService->getAllMedicaments();
+        $categories  = $this->categoryService->getAllCategoriesWithoutPaginate();
         return Inertia::render('Sales/Medicaments/Index', [
             'medicaments' => $medicaments,
+            'categories'  => $categories,
         ]);
     }
 
@@ -37,5 +39,14 @@ class MedicamentController extends Controller
     {
         $this->medicamentService->createMedicament($request->validated());
         return redirect()->route('medicament.index');
+    }
+
+    public function update(StoreMedicamentRequest $request, int $id)
+    {
+        $this->medicamentService->updateMedicament($id, $request->validated());
+
+        return redirect()
+            ->route('medicament.index')
+            ->with('success', 'Medicamento actualizado correctamente');
     }
 }

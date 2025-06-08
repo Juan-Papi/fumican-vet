@@ -27,4 +27,9 @@ class MedicamentService
     {
         return $this->medicamentRepository->search();
     }
+
+    public function updateMedicament($id, array $data)
+    {
+        return $this->medicamentRepository->update($id, $data);
+    }
 }

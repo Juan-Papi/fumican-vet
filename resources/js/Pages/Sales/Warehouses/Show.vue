@@ -100,7 +100,7 @@ watch(currentPage, (newPage) => {
         </div>
 
         <div v-else>
-            <p>No hay inventarios para este almacén.</p>
+            <p>No hay medicamentos para este almacén.</p>
         </div>
 
         <!-- Paginación -->

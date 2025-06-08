@@ -274,7 +274,7 @@ console.log(props.inventories);
                         <FwbTableCell>
                             {{ inventory.stock }}
                         </FwbTableCell>
-                        <FwbTableCell> ${{ inventory.price }} </FwbTableCell>
+                        <FwbTableCell> {{ inventory.price }}Bs. </FwbTableCell>
                         <FwbTableCell>
                             {{ inventory.warehouse.name }}
                         </FwbTableCell>
