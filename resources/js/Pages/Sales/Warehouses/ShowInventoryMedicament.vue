@@ -14,6 +14,7 @@ import {
     FwbPagination,
     FwbModal,
     FwbToast,
+    FwbBadge,
 } from "flowbite-vue";
 
 const page = usePage();
@@ -257,6 +258,7 @@ console.log(props.inventories);
                     <FwbTableHeadCell>Stock</FwbTableHeadCell>
                     <FwbTableHeadCell>Precio</FwbTableHeadCell>
                     <FwbTableHeadCell>Almacén</FwbTableHeadCell>
+                    <FwbTableHeadCell>Tipo de lote</FwbTableHeadCell>
                     <FwbTableHeadCell>
                         <span class="sr-only">Acciones</span>
                     </FwbTableHeadCell>
@@ -277,6 +279,22 @@ console.log(props.inventories);
                             {{ inventory.warehouse.name }}
                         </FwbTableCell>
                         <FwbTableCell>
+                            <fwb-badge
+                                v-if="
+                                    inventory.purchase_note_detail_id !== null
+                                "
+                                type="yellow"
+                                >Auto</fwb-badge
+                            >
+                            <fwb-badge
+                                v-if="
+                                    inventory.purchase_note_detail_id === null
+                                "
+                                type="green"
+                                >Manual</fwb-badge
+                            >
+                        </FwbTableCell>
+                        <FwbTableCell>
                             <div class="flex space-x-2">
                                 <FwbA
                                     @click.prevent="openViewModal(inventory)"
@@ -287,7 +305,10 @@ console.log(props.inventories);
                                     ></i>
                                 </FwbA>
                                 <FwbA
-                                    v-if="inventory.purchase_note_detail_id === null"
+                                    v-if="
+                                        inventory.purchase_note_detail_id ===
+                                        null
+                                    "
                                     @click.prevent="openEditModal(inventory)"
                                     class="p-1 rounded hover:bg-gray-100"
                                 >
@@ -296,7 +317,10 @@ console.log(props.inventories);
                                     ></i>
                                 </FwbA>
                                 <FwbA
-                                    v-if="inventory.purchase_note_detail_id === null"
+                                    v-if="
+                                        inventory.purchase_note_detail_id ===
+                                        null
+                                    "
                                     @click.prevent="openDeleteModal(inventory)"
                                     class="p-1 hover:bg-gray-100 rounded"
                                 >

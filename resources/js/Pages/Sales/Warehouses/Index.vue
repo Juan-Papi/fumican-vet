@@ -88,7 +88,7 @@ watch(currentPage, (newPage) => {
                         </FwbTableCell>
                         <FwbTableCell>
                             <FwbA href="#">
-                                <i class="fa-solid fa-trash lg:mr-2 text-black hover:text-blue-600"></i>
+                                <i class="fa-solid fa-trash lg:mr-2 text-black hover:text-red-600"></i>
                             </FwbA>
                         </FwbTableCell>
                     </FwbTableRow>
