@@ -21,7 +21,6 @@ class Inventory extends Model
         'warehouse_id',
         'medicament_id',
         'purchase_note_detail_id',
-        'sales_note_detail_id',
     ];
 
     public function warehouse()
@@ -37,10 +36,5 @@ class Inventory extends Model
     public function purchaseNoteDetail()
     {
         return $this->belongsTo(PurchaseNoteDetail::class);
-    }
-
-    public function salesNoteDetail()
-    {
-        return $this->belongsTo(SalesNoteDetail::class);
     }
 }

@@ -32,9 +32,4 @@ class SalesNoteDetail extends Model
     {
         return $this->belongsTo(Medicament::class);
     }
-
-    public function inventory()
-    {
-        return $this->hasOne(Inventory::class, 'sales_note_detail_id');
-    }
 }

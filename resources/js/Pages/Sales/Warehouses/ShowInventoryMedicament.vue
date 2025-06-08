@@ -12,6 +12,7 @@ import {
     FwbTableHeadCell,
     FwbTableRow,
     FwbPagination,
+    FwbModal,
 } from "flowbite-vue";
 
 const props = defineProps({
@@ -34,6 +35,43 @@ watch(currentPage, (newPage) => {
     );
 });
 
+// estado del modal
+const isShowModal = ref(false);
+const isProcessing = ref(false);
+const modalForm = ref({
+    stock: null,
+    price: null,
+});
+
+// abrir modal
+function openModal() {
+    modalForm.value.stock = null;
+    modalForm.value.price = null;
+    isShowModal.value = true;
+}
+
+// guardar lote
+function submitModal() {
+    if (isProcessing.value) return; // ← evita doble submit
+    isProcessing.value = true; // ← deshabilita el botón
+
+    router.post(
+        route("warehouse.medicament.inventory.store", {
+            warehouseId: props.warehouse.id,
+            medicamentId: props.medicament.id,
+        }),
+        modalForm.value,
+        {
+            onSuccess: () => {
+                isShowModal.value = false;
+            },
+            onFinish: () => {
+                isProcessing.value = false; // ← vuelve a habilitar
+            },
+        }
+    );
+}
+
 console.log(props.inventories);
 </script>
 
@@ -41,17 +79,12 @@ console.log(props.inventories);
     <AdminLayout :title="`Inventarios de ${props.warehouse.name}`">
         <div class="flex justify-between my-6">
             <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
-                Inventarios (Lotes de medicamento) de
+                Inventarios (Lotes de medicamento {{ props.medicament.name }})
+                de
                 {{ props.warehouse.name }}
             </h2>
-            <FwbButton
-                :href="route('warehouse.create')"
-                type="button"
-                color="purple"
-                class="flex items-center gap-2"
-            >
-                <i class="fa-solid fa-plus"></i>
-                Agregar nuevo lote
+            <FwbButton color="purple" @click="openModal">
+                <i class="fa-solid fa-plus mr-2"></i> Agregar nuevo lote
             </FwbButton>
         </div>
         <div class="h-12">
@@ -146,5 +179,67 @@ console.log(props.inventories);
                 large
             ></FwbPagination>
         </div>
+
+        <!-- Modal de creación de lote -->
+        <FwbModal v-if="isShowModal" @close="isShowModal = false">
+            <template #header>
+                <h3 class="text-lg font-semibold">Nuevo Lote</h3>
+            </template>
+
+            <template #body>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold">
+                            <i class="fa-solid fa-warehouse mr-1"></i>
+                            Almacén
+                        </label>
+                        <p class="mt-1">{{ props.warehouse.name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold">
+                            <i class="fa-solid fa-capsules mr-1"></i>
+                            Medicamento
+                        </label>
+                        <p class="mt-1">{{ props.medicament.name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Stock</label>
+                        <input
+                            v-model.number="modalForm.stock"
+                            type="number"
+                            min="1"
+                            class="mt-1 w-full p-2 border rounded"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Precio</label>
+                        <input
+                            v-model.number="modalForm.price"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            class="mt-1 w-full p-2 border rounded"
+                        />
+                    </div>
+                </div>
+            </template>
+
+            <template #footer>
+                <div class="flex justify-end space-x-2">
+                    <FwbButton color="alternative" @click="isShowModal = false">
+                        Cancelar
+                    </FwbButton>
+                    <FwbButton
+                        color="purple"
+                        @click="submitModal"
+                        :disabled="isProcessing"
+                    >
+                        <i class="fa-solid fa-save mr-2"></i>
+                        <span v-if="!isProcessing">Guardar</span>
+                        <span v-else>Guardando...</span>
+                    </FwbButton>
+                </div>
+            </template>
+        </FwbModal>
     </AdminLayout>
 </template>

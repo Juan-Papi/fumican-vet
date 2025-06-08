@@ -93,6 +93,10 @@ Route::middleware([
             Route::get('{id}', [WarehouseController::class, 'show'])->name('warehouse.show');
             Route::get('{warehouseId}/medicament/{medicamentId}/inventory', [WarehouseController::class, 'showInventoryMedicament'])
                 ->name('warehouse.medicament.inventory');
+            Route::post(
+                '{warehouseId}/medicament/{medicamentId}/inventory',
+                [WarehouseController::class, 'storeInventory']
+            )->name('warehouse.medicament.inventory.store');
         });
 
         Route::group(['prefix' => 'purchases'], function () {
