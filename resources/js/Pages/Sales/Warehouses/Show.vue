@@ -36,6 +36,7 @@ watch(currentPage, (newPage) => {
     <AdminLayout :title="`Inventarios de ${props.warehouse.name}`">
         <div class="flex justify-between my-6">
             <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
+                <i class="fa-solid fa-warehouse mr-1"></i>
                 Almacén: {{ props.warehouse.name }}
             </h2>
             <FwbButton

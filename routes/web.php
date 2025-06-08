@@ -97,6 +97,10 @@ Route::middleware([
                 '{warehouseId}/medicament/{medicamentId}/inventory',
                 [WarehouseController::class, 'storeInventory']
             )->name('warehouse.medicament.inventory.store');
+            Route::put(
+                '{warehouseId}/medicament/{medicamentId}/inventory/{inventoryId}',
+                [WarehouseController::class, 'updateInventory']
+            )->name('warehouse.medicament.inventory.update');
         });
 
         Route::group(['prefix' => 'purchases'], function () {

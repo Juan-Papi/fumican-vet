@@ -8,8 +8,8 @@ use App\Services\Sales\WarehouseService;
 use App\Services\Sales\InventoryService;
 use App\Services\Sales\MedicamentService;
 use App\Http\Requests\Sales\StoreWarehouseRequest;
+use App\Http\Requests\Sales\UpdateInventoryRequest;
 use App\Models\Sales\Inventory;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class WarehouseController extends Controller
@@ -52,10 +52,6 @@ class WarehouseController extends Controller
         $inventories = $inventoryService->getInventoriesByWarehoseAndMedicament($warehouseId, $medicamentId);
         $warehouse = $this->warehouseService->getWarehouseById($warehouseId);
         $medicament = $medicamentService->getMedicamentById($medicamentId);
-        // if($inventories->isEmpty()) {
-        //    dd('esta vacio');
-        // }
-        // return $warehouse;
         return Inertia::render('Sales/Warehouses/ShowInventoryMedicament', [
             'warehouse' => $warehouse,
             'inventories' => $inventories,
@@ -74,5 +70,22 @@ class WarehouseController extends Controller
         Inventory::create($data);
 
         return back()->with('success', 'Lote agregado exitosamente');
+    }
+
+    public function updateInventory(
+        UpdateInventoryRequest $request,
+        int $warehouseId,
+        int $medicamentId,
+        int $inventoryId
+    ) {
+        $data = $request->validated();
+
+        $inventory = Inventory::where('warehouse_id', $warehouseId)
+            ->where('medicament_id', $medicamentId)
+            ->findOrFail($inventoryId);
+
+        $inventory->update($data);
+
+        return back()->with('success', 'Lote actualizado correctamente');
     }
 }

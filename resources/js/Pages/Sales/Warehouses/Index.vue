@@ -32,6 +32,9 @@ watch(currentPage, (newPage) => {
     <AdminLayout title="Almacenes">
         <div class="flex justify-between my-6">
             <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
+                <i class="fa-solid fa-warehouse mr-1 text-purple-600"></i>
+                <i class="fa-solid fa-warehouse mr-1 text-purple-400"></i>
+                <i class="fa-solid fa-warehouse text-purple-200"></i>
                 Almacenes
             </h2>
             <FwbButton
