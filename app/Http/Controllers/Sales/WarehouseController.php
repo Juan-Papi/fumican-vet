@@ -88,4 +88,18 @@ class WarehouseController extends Controller
 
         return back()->with('success', 'Lote actualizado correctamente');
     }
+
+    public function destroyInventory(
+        int $warehouseId,
+        int $medicamentId,
+        int $inventoryId
+    ) {
+        $inv = Inventory::where('warehouse_id', $warehouseId)
+            ->where('medicament_id', $medicamentId)
+            ->findOrFail($inventoryId);
+
+        $inv->delete();
+
+        return back()->with('success', 'Lote eliminado correctamente');
+    }
 }

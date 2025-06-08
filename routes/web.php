@@ -101,6 +101,10 @@ Route::middleware([
                 '{warehouseId}/medicament/{medicamentId}/inventory/{inventoryId}',
                 [WarehouseController::class, 'updateInventory']
             )->name('warehouse.medicament.inventory.update');
+            Route::delete(
+                '{warehouseId}/medicament/{medicamentId}/inventory/{inventoryId}',
+                [WarehouseController::class, 'destroyInventory']
+            )->name('warehouse.medicament.inventory.destroy');
         });
 
         Route::group(['prefix' => 'purchases'], function () {

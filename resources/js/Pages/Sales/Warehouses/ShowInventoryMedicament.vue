@@ -1,7 +1,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { ref, watch } from "vue";
-import { Link, router } from "@inertiajs/vue3";
+import { ref, watch, computed, nextTick } from "vue";
+import { usePage, Link, router } from "@inertiajs/vue3";
 import {
     FwbA,
     FwbButton,
@@ -13,7 +13,38 @@ import {
     FwbTableRow,
     FwbPagination,
     FwbModal,
+    FwbToast,
 } from "flowbite-vue";
+
+const page = usePage();
+
+// si no viene flash, lo convertimos en objeto vacío
+const flash = computed(() => page.props.flash || {});
+
+// detecta flash.success y flash.error
+const showSuccessToast = ref(false);
+const showErrorToast = ref(false);
+
+// Watchers simplificados - solo para detectar flash messages
+watch(
+    () => flash.value.success,
+    (val) => {
+        if (val) {
+            showSuccessToast.value = true;
+            setTimeout(() => (showSuccessToast.value = false), 3000);
+        }
+    }
+);
+
+watch(
+    () => flash.value.error,
+    (val) => {
+        if (val) {
+            showErrorToast.value = true;
+            setTimeout(() => (showErrorToast.value = false), 3000);
+        }
+    }
+);
 
 const props = defineProps({
     warehouse: Object,
@@ -65,10 +96,12 @@ function openEditModal(inv) {
     isShowEditModal.value = true;
 }
 
-// Submits
+const toastMessage = ref("");
+
 function submitCreate() {
     if (isProcessing.value) return;
     isProcessing.value = true;
+
     router.post(
         route("warehouse.medicament.inventory.store", {
             warehouseId: props.warehouse.id,
@@ -76,8 +109,23 @@ function submitCreate() {
         }),
         modalForm.value,
         {
-            onSuccess: () => (isShowCreateModal.value = false),
-            onFinish: () => (isProcessing.value = false),
+            // si quieres que recargue y coja flash:
+            // preserveState: false,
+            onSuccess: () => {
+                isShowCreateModal.value = false;
+                toastMessage.value = "Lote agregado exitosamente";
+                showSuccessToast.value = true;
+            },
+            onError: () => {
+                toastMessage.value = "Error al agregar lote";
+                showErrorToast.value = true;
+            },
+            onFinish: () => {
+                isProcessing.value = false;
+                // ocultar el toast al cabo de 3s
+                setTimeout(() => (showSuccessToast.value = false), 3000);
+                setTimeout(() => (showErrorToast.value = false), 3000);
+            },
         }
     );
 }
@@ -85,6 +133,7 @@ function submitCreate() {
 function submitEdit() {
     if (isProcessing.value) return;
     isProcessing.value = true;
+
     router.put(
         route("warehouse.medicament.inventory.update", {
             warehouseId: props.warehouse.id,
@@ -93,8 +142,63 @@ function submitEdit() {
         }),
         modalForm.value,
         {
-            onSuccess: () => (isShowEditModal.value = false),
-            onFinish: () => (isProcessing.value = false),
+            onSuccess: () => {
+                isShowEditModal.value = false;
+                toastMessage.value = "Lote actualizado correctamente";
+                showSuccessToast.value = true;
+            },
+            onError: () => {
+                toastMessage.value = "Error al actualizar lote";
+                showErrorToast.value = true;
+            },
+            onFinish: () => {
+                isProcessing.value = false;
+                setTimeout(() => (showSuccessToast.value = false), 3000);
+                setTimeout(() => (showErrorToast.value = false), 3000);
+            },
+        }
+    );
+}
+
+// estados para eliminar
+const isShowDeleteModal = ref(false);
+const isDeleting = ref(false);
+
+// abrir confirmación de borrar
+function openDeleteModal(inv) {
+    selectedInventory.value = inv;
+    isShowDeleteModal.value = true;
+}
+
+// submitDelete - CON preserveState (solo para este caso problemático)
+function submitDelete() {
+    if (isDeleting.value) return;
+    isDeleting.value = true;
+
+    router.delete(
+        route("warehouse.medicament.inventory.destroy", {
+            warehouseId: props.warehouse.id,
+            medicamentId: props.medicament.id,
+            inventoryId: selectedInventory.value.id,
+        }),
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                isShowDeleteModal.value = false;
+                toastMessage.value = "Lote eliminado correctamente";
+                showSuccessToast.value = true;
+                setTimeout(() => (showSuccessToast.value = false), 3000);
+            },
+            onError: (errors) => {
+                console.error("Error al eliminar:", errors);
+                toastMessage.value = "Error al eliminar lote";
+                showErrorToast.value = true;
+                setTimeout(() => (showErrorToast.value = false), 3000);
+            },
+            onFinish: () => {
+                isDeleting.value = false;
+            },
         }
     );
 }
@@ -136,6 +240,15 @@ console.log(props.inventories);
                 </svg>
                 Volver a Almacén
             </FwbButton>
+        </div>
+        <div class="fixed top-40 right-6 z-50">
+            <!-- Toasts -->
+            <FwbToast v-if="showSuccessToast" type="success">
+                {{ toastMessage }}
+            </FwbToast>
+            <FwbToast v-if="showErrorToast" type="danger">
+                {{ toastMessage }}
+            </FwbToast>
         </div>
         <div v-if="props.inventories && props.inventories.data.length > 0">
             <FwbTable>
@@ -182,11 +295,11 @@ console.log(props.inventories);
                                     ></i>
                                 </FwbA>
                                 <FwbA
-                                    href="#"
+                                    @click.prevent="openDeleteModal(inventory)"
                                     class="p-1 hover:bg-gray-100 rounded"
                                 >
                                     <i
-                                        class="fa-solid fa-trash text-black hover:text-blue-600"
+                                        class="fa-solid fa-trash text-black hover:text-red-600"
                                     ></i>
                                 </FwbA>
                             </div>
@@ -357,6 +470,38 @@ console.log(props.inventories);
                         <span v-else>Guardando...</span>
                     </FwbButton>
                 </div>
+            </template>
+        </FwbModal>
+
+        <!-- Confirmar eliminación -->
+        <FwbModal v-if="isShowDeleteModal" @close="isShowDeleteModal = false">
+            <template #header>Confirmar eliminación</template>
+            <template #body>
+                <p>
+                    ¿Seguro que deseas eliminar el lote con
+                    <strong>Stock: {{ selectedInventory.stock }}</strong> y
+                    <strong>Precio: {{ selectedInventory.price }}</strong
+                    >?
+                </p>
+            </template>
+            <template #footer>
+                <FwbButton
+                    color="alternative"
+                    @click="isShowDeleteModal = false"
+                    :disabled="isDeleting"
+                >
+                    <i class="fa-solid fa-ban mr-2"></i>
+                    Cancelar
+                </FwbButton>
+                <FwbButton
+                    color="red"
+                    @click="submitDelete"
+                    :disabled="isDeleting"
+                >
+                    <i class="fa-solid fa-trash mr-2"></i>
+                    <span v-if="!isDeleting">Eliminar</span>
+                    <span v-else>Eliminando…</span>
+                </FwbButton>
             </template>
         </FwbModal>
     </AdminLayout>
