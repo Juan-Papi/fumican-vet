@@ -12,6 +12,12 @@ class WarehouseRepository
         return Warehouse::orderBy('updated_at', 'desc')->paginate();
     }
 
+    public function getAllWithoutPaginate()
+    {
+        return Warehouse::orderBy('updated_at', 'desc')->get();
+    }
+
+
     public function findById($id)
     {
         return Warehouse::findOrFail($id);

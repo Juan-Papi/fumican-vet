@@ -20,6 +20,7 @@ import {
 const props = defineProps({
     medicaments: Object,
     categories: Array,
+    warehouses: Array,
 });
 
 const currentPage = ref(props.medicaments.current_page);
@@ -165,6 +166,89 @@ function submitDelete() {
         }
     );
 }
+
+// Modal para agregar nuevo lote de medicamento
+const isAddBatchModal = ref(false);
+const batchForm = ref({
+    warehouse_id: null,
+    stock: null,
+    price: null,
+});
+const selectedMedForBatch = ref(null);
+const isBatchProcessing = ref(false);
+
+function openAddBatchModal(med) {
+    selectedMedForBatch.value = med;
+    batchForm.value = {
+        warehouse_id: null,
+        stock: null,
+        price: null,
+    };
+    isAddBatchModal.value = true;
+}
+
+function closeAddBatchModal() {
+    isAddBatchModal.value = false;
+    selectedMedForBatch.value = null;
+    isBatchProcessing.value = false;
+    batchForm.value = {
+        warehouse_id: null,
+        stock: null,
+        price: null,
+    };
+}
+
+function submitAddBatch() {
+    if (isBatchProcessing.value) return;
+    if (!batchForm.value.warehouse_id) {
+        toastType.value = "danger";
+        toastMessage.value = "Debe seleccionar un almacén";
+        showToast.value = true;
+        return;
+    }
+    if (!batchForm.value.stock || batchForm.value.stock < 1) {
+        toastType.value = "danger";
+        toastMessage.value = "Debe ingresar un stock válido";
+        showToast.value = true;
+        return;
+    }
+    if (batchForm.value.price === null || batchForm.value.price < 0) {
+        toastType.value = "danger";
+        toastMessage.value = "Debe ingresar un precio válido";
+        showToast.value = true;
+        return;
+    }
+
+    isBatchProcessing.value = true;
+
+    router.post(
+        route("warehouse.medicament.inventory.store", {
+            warehouseId: batchForm.value.warehouse_id,
+            medicamentId: selectedMedForBatch.value.id,
+        }),
+        {
+            stock: batchForm.value.stock,
+            price: batchForm.value.price,
+        },
+        {
+            onSuccess: () => {
+                closeAddBatchModal();
+                toastType.value = "success";
+                toastMessage.value = "Lote agregado correctamente";
+                showToast.value = true;
+            },
+            onError: () => {
+                toastType.value = "danger";
+                toastMessage.value = "Error al agregar lote";
+                showToast.value = true;
+            },
+            onFinish: () => {
+                isBatchProcessing.value = false;
+                setTimeout(() => (showToast.value = false), 3000);
+            },
+        }
+    );
+}
 </script>
 
 <template>
@@ -221,7 +305,7 @@ function submitDelete() {
                     <FwbTableCell>
                         <div class="flex space-x-2">
                             <FwbA
-                                href="#"
+                                @click.prevent="openAddBatchModal(m)"
                                 class="p-1 rounded hover:bg-gray-100"
                             >
                                 <i
@@ -494,6 +578,84 @@ function submitDelete() {
                     <i class="fa-solid fa-arrows-rotate mr-2"></i>
                     <span v-if="!isProcessing">Actualizar</span>
                     <span v-else>Actualizando…</span>
+                </FwbButton>
+            </template>
+        </FwbModal>
+
+        <!-- Modal Agregar Lote -->
+        <FwbModal v-if="isAddBatchModal" @close="closeAddBatchModal">
+            <template #header>
+                Agregar lote a medicamento:&nbsp;
+                <span class="font-bold">{{ selectedMedForBatch?.name }}</span>
+            </template>
+            <template #body>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1"
+                            >Almacén</label
+                        >
+                        <select
+                            v-model="batchForm.warehouse_id"
+                            class="w-full p-2 border rounded"
+                        >
+                            <option value="" disabled>
+                                Seleccionar almacén
+                            </option>
+                            <option
+                                v-for="w in warehouses"
+                                :key="w.id"
+                                :value="w.id"
+                            >
+                                {{ w.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1"
+                            >Stock</label
+                        >
+                        <input
+                            type="number"
+                            v-model.number="batchForm.stock"
+                            min="1"
+                            class="w-full p-2 border rounded"
+                            placeholder="Cantidad de unidades"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1"
+                            >Precio</label
+                        >
+                        <input
+                            type="number"
+                            v-model.number="batchForm.price"
+                            min="0"
+                            step="0.01"
+                            class="w-full p-2 border rounded"
+                            placeholder="Precio por unidad"
+                        />
+                    </div>
+                </div>
+            </template>
+            <template #footer>
+                <FwbButton
+                    color="alternative"
+                    @click="closeAddBatchModal"
+                    :disabled="isBatchProcessing"
+                    >Cancelar</FwbButton
+                >
+                <FwbButton
+                    color="green"
+                    @click="submitAddBatch"
+                    :disabled="isBatchProcessing"
+                >
+                    <i
+                        v-if="isBatchProcessing"
+                        class="fa-solid fa-spinner fa-spin mr-2"
+                    ></i>
+                    <i v-else class="fa-solid fa-plus mr-2"></i>
+                    <span v-if="!isBatchProcessing">Agregar lote</span>
+                    <span v-else>Agregando…</span>
                 </FwbButton>
             </template>
         </FwbModal>

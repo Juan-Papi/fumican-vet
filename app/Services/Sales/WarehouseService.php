@@ -13,6 +13,12 @@ class WarehouseService
         return $this->warehouseRepository->getAll();
     }
 
+    public function getAllWarehousesWithoutPaginate()
+    {
+        return $this->warehouseRepository->getAllWithoutPaginate();
+    }
+
+
     public function getWarehouseById($id)
     {
         return $this->warehouseRepository->findById($id);
