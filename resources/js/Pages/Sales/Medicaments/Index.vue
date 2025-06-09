@@ -221,11 +221,19 @@ function submitDelete() {
                     <FwbTableCell>
                         <div class="flex space-x-2">
                             <FwbA
+                                href="#"
+                                class="p-1 rounded hover:bg-gray-100"
+                            >
+                                <i
+                                    class="fa-solid fa-warehouse text-black hover:text-green-600"
+                                ></i>
+                            </FwbA>
+                            <FwbA
                                 @click.prevent="openViewModal(m)"
                                 class="p-1 rounded hover:bg-gray-100"
                             >
                                 <i
-                                    class="fa-solid fa-eye text-black hover:text-blue-600"
+                                    class="fa-solid fa-eye text-black hover:text-purple-600"
                                 ></i>
                             </FwbA>
                             <FwbA
@@ -289,32 +297,6 @@ function submitDelete() {
                 </FwbButton>
             </template>
         </FwbModal>
-
-        <!-- Modal “Eliminar” -->
-        <!-- <FwbModal v-if="isShowDeleteModal" @close="isShowDeleteModal = false">
-            <template #header>Confirmar eliminación</template>
-            <template #body>
-                ¿Eliminar <strong>{{ selectedMed.name }}</strong
-                >?
-            </template>
-            <template #footer>
-                <FwbButton
-                    color="alternative"
-                    @click="isShowDeleteModal = false"
-                    :disabled="isDeleting"
-                >
-                    Cancelar
-                </FwbButton>
-                <FwbButton
-                    color="red"
-                    @click="submitDelete"
-                    :disabled="isDeleting"
-                >
-                    <span v-if="!isDeleting">Eliminar</span>
-                    <span v-else>Eliminando…</span>
-                </FwbButton>
-            </template>
-        </FwbModal> -->
 
         <!-- Modal “Eliminar” -->
         <FwbModal v-if="isShowDeleteModal" @close="closeDeleteModal">
