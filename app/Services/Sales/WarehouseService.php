@@ -18,7 +18,6 @@ class WarehouseService
         return $this->warehouseRepository->getAllWithoutPaginate();
     }
 
-
     public function getWarehouseById($id)
     {
         return $this->warehouseRepository->findById($id);
@@ -27,6 +26,16 @@ class WarehouseService
     public function createWarehouse(array $userData)
     {
         return $this->warehouseRepository->create($userData);
+    }
+
+    public function updateWarehouse(int $id, array $data)
+    {
+        return $this->warehouseRepository->update($id, $data);
+    }
+
+    public function deleteWarehouse(int $id)
+    {
+        return $this->warehouseRepository->delete($id);
     }
 
     public function search()

@@ -17,7 +17,6 @@ class WarehouseRepository
         return Warehouse::orderBy('updated_at', 'desc')->get();
     }
 
-
     public function findById($id)
     {
         return Warehouse::findOrFail($id);
@@ -31,6 +30,11 @@ class WarehouseRepository
     public function update($id, array $data)
     {
         return Warehouse::where('id', $id)->update($data);
+    }
+
+    public function delete($id)
+    {
+        return Warehouse::where('id', $id)->delete();
     }
 
     public function search()

@@ -85,10 +85,9 @@ Route::middleware([
 
         Route::group(['prefix' => 'warehouses'], function () {
             Route::get('/', [WarehouseController::class, 'index'])->name('warehouse.index');
-            Route::get('create', [WarehouseController::class, 'create'])->name('warehouse.create');
             Route::post('/', [WarehouseController::class, 'store'])->name('warehouse.store');
-            Route::get('{id}/edit', [WarehouseController::class, 'edit'])->name('warehouse.edit');
             Route::put('{id}', [WarehouseController::class, 'update'])->name('warehouse.update');
+            Route::post('{id}', [WarehouseController::class, 'destroy'])->name('warehouse.destroy');
             Route::get('search', [WarehouseController::class, 'search'])->name('warehouse.search');
             Route::get('{id}', [WarehouseController::class, 'show'])->name('warehouse.show');
             Route::get('{warehouseId}/medicament/{medicamentId}/inventory', [WarehouseController::class, 'showInventoryMedicament'])

@@ -24,13 +24,6 @@ class WarehouseController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        return Inertia::render('Sales/Warehouses/Form', [
-            'formAction' => 'create',
-        ]);
-    }
-
     public function store(StoreWarehouseRequest $request)
     {
         $this->warehouseService->createWarehouse($request->validated());
@@ -46,6 +39,21 @@ class WarehouseController extends Controller
             'inventories' => $inventories
         ]);
     }
+
+    // Actualizar almacén
+    public function update(StoreWarehouseRequest $request, int $id)
+    {
+        $this->warehouseService->updateWarehouse($id, $request->validated());
+        return redirect()->route('warehouse.index')->with('success', 'Almacén actualizado correctamente');
+    }
+
+    // Eliminar almacén (usamos POST para facilitar integración con Inertia y evitar problemas con DELETE)
+    public function destroy(int $id)
+    {
+        $this->warehouseService->deleteWarehouse($id);
+        return redirect()->route('warehouse.index')->with('success', 'Almacén eliminado correctamente');
+    }
+
 
     public function showInventoryMedicament(int $warehouseId, int $medicamentId, InventoryService $inventoryService, MedicamentService $medicamentService)
     {
