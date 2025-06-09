@@ -43,4 +43,9 @@ class MedicamentRepository
             ->take(5)
             ->get();
     }
+
+    public function delete($id)
+    {
+        return Medicament::destroy($id);
+    }
 }

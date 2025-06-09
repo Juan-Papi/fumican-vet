@@ -7,7 +7,7 @@ use App\Services\Sales\CategoryService;
 use App\Services\Sales\MedicamentService;
 use App\Http\Requests\Sales\StoreMedicamentRequest;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class MedicamentController extends Controller
@@ -25,16 +25,6 @@ class MedicamentController extends Controller
         ]);
     }
 
-    public function create(CategoryService $categoryService)
-    {
-        $categories = $categoryService->getAllCategoriesWithoutPaginate();
-
-        return Inertia::render('Sales/Medicaments/Form', [
-            'formAction' => 'create',
-            'categories' => $categories,
-        ]);
-    }
-
     public function store(StoreMedicamentRequest $request)
     {
         $this->medicamentService->createMedicament($request->validated());
@@ -48,5 +38,12 @@ class MedicamentController extends Controller
         return redirect()
             ->route('medicament.index')
             ->with('success', 'Medicamento actualizado correctamente');
+    }
+
+    public function destroy(int $id, Request $request)
+    {
+        $this->medicamentService->deleteMedicament($id);
+
+        return redirect()->route('medicament.index')->with('success', 'Medicamento eliminado correctamente');
     }
 }

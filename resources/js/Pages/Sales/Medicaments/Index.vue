@@ -27,16 +27,15 @@ watch(currentPage, (page) => {
     router.get(route("medicament.index"), { page }, { preserveState: true });
 });
 
-// estado del toast
+// Toast
 const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref("success");
 
-// estados del modal & formulario
+// Crear / Editar modales
 const isCreateModal = ref(false);
 const isEditModal = ref(false);
 const isProcessing = ref(false);
-
 const form = ref({
     name: "",
     dosage: "",
@@ -45,9 +44,18 @@ const form = ref({
     controlled_substance: "no",
     category_id: null,
 });
-
-// para editar
 const selectedMed = ref(null);
+
+// Ver / Eliminar modales
+const isShowViewModal = ref(false);
+const isShowDeleteModal = ref(false);
+const isDeleting = ref(false);
+
+function closeDeleteModal() {
+    isShowDeleteModal.value = false;
+    selectedMed.value = null;
+    isDeleting.value = false;
+}
 
 function openCreateModal() {
     selectedMed.value = null;
@@ -61,6 +69,7 @@ function openCreateModal() {
     };
     isCreateModal.value = true;
 }
+
 function openEditModal(med) {
     selectedMed.value = med;
     form.value = {
@@ -72,6 +81,16 @@ function openEditModal(med) {
         category_id: med.category.id,
     };
     isEditModal.value = true;
+}
+
+function openViewModal(m) {
+    selectedMed.value = m;
+    isShowViewModal.value = true;
+}
+
+function openDeleteModal(m) {
+    selectedMed.value = m;
+    isShowDeleteModal.value = true;
 }
 
 function submitCreate() {
@@ -117,24 +136,56 @@ function submitEdit() {
         },
     });
 }
+
+function submitDelete() {
+    if (isDeleting.value) return;
+    isDeleting.value = true;
+
+    router.post(
+        route("medicament.destroy", selectedMed.value.id),
+        {}, // sin payload
+        {
+            onSuccess: () => {
+                closeDeleteModal(); // Cierra modal y resetea estado
+                toastType.value = "success";
+                toastMessage.value = "Medicamento eliminado correctamente";
+                showToast.value = true;
+            },
+            onError: () => {
+                isDeleting.value = false;
+                toastType.value = "danger";
+                toastMessage.value = "Error eliminando medicamento";
+                showToast.value = true;
+            },
+            onFinish: () => {
+                // Aseguramos que el spinner se desactive después de todo
+                isDeleting.value = false;
+                setTimeout(() => (showToast.value = false), 3000);
+            },
+        }
+    );
+}
 </script>
 
 <template>
     <AdminLayout title="Medicamentos">
         <!-- Toast -->
         <div class="fixed top-4 right-4 z-50">
-            <FwbToast v-if="showToast" :type="toastType">{{
-                toastMessage
-            }}</FwbToast>
+            <FwbToast v-if="showToast" :type="toastType">
+                {{ toastMessage }}
+            </FwbToast>
         </div>
 
+        <!-- Cabecera + Botón “Nuevo” -->
         <div class="flex justify-between my-6">
             <h2 class="text-2xl font-semibold">Medicamentos</h2>
             <FwbButton color="purple" @click="openCreateModal">
-                <i class="fa-solid fa-plus mr-2"></i> Agregar medicamento
+                <i class="fa-solid fa-plus mr-2"></i>
+                Agregar medicamento
             </FwbButton>
         </div>
 
+        <!-- Tabla -->
         <FwbTable>
             <FwbTableHead>
                 <FwbTableHeadCell>Nombre</FwbTableHeadCell>
@@ -156,16 +207,13 @@ function submitEdit() {
                     <FwbTableCell>{{ m.expiration_date }}</FwbTableCell>
                     <FwbTableCell>
                         <FwbBadge
-                            v-if="m.controlled_substance !== 'yes'"
-                            type="yellow"
+                            :type="
+                                m.controlled_substance === 'yes'
+                                    ? 'green'
+                                    : 'yellow'
+                            "
                         >
-                            No
-                        </FwbBadge>
-                        <FwbBadge
-                            v-if="m.controlled_substance === 'yes'"
-                            type="green"
-                        >
-                            Sí
+                            {{ m.controlled_substance === "yes" ? "Sí" : "No" }}
                         </FwbBadge>
                     </FwbTableCell>
                     <FwbTableCell>{{ m.category.name }}</FwbTableCell>
@@ -173,20 +221,12 @@ function submitEdit() {
                     <FwbTableCell>
                         <div class="flex space-x-2">
                             <FwbA
-                                href="#"
-                                class="p-1 hover:bg-gray-100 rounded"
-                            >
-                                <i
-                                    class="fa-solid fa-boxes-stacked text-black hover:text-green-600"
-                                ></i>
-                            </FwbA>
-                            <FwbA
-                                href="#"
-                                class="p-1 hover:bg-gray-100 rounded"
+                                @click.prevent="openViewModal(m)"
+                                class="p-1 rounded hover:bg-gray-100"
                             >
                                 <i
                                     class="fa-solid fa-eye text-black hover:text-blue-600"
-                                />
+                                ></i>
                             </FwbA>
                             <FwbA
                                 @click.prevent="openEditModal(m)"
@@ -197,8 +237,8 @@ function submitEdit() {
                                 ></i>
                             </FwbA>
                             <FwbA
-                                href="#"
-                                class="p-1 hover:bg-gray-100 rounded"
+                                @click.prevent="openDeleteModal(m)"
+                                class="p-1 rounded hover:bg-gray-100"
                             >
                                 <i
                                     class="fa-solid fa-trash text-black hover:text-red-600"
@@ -210,6 +250,7 @@ function submitEdit() {
             </FwbTableBody>
         </FwbTable>
 
+        <!-- Paginación -->
         <div class="flex justify-center my-4">
             <FwbPagination
                 v-model="currentPage"
@@ -218,6 +259,106 @@ function submitEdit() {
                 large
             />
         </div>
+
+        <!-- Modal “Ver” -->
+        <FwbModal v-if="isShowViewModal" @close="isShowViewModal = false">
+            <template #header>Detalle de Medicamento</template>
+            <template #body>
+                <p><strong>Nombre:</strong> {{ selectedMed.name }}</p>
+                <p><strong>Dosificación:</strong> {{ selectedMed.dosage }}</p>
+                <p>
+                    <strong>Fabricante:</strong> {{ selectedMed.manufacturer }}
+                </p>
+                <p>
+                    <strong>Expiración:</strong>
+                    {{ selectedMed.expiration_date }}
+                </p>
+                <p>
+                    <strong>Controlada:</strong>
+                    {{
+                        selectedMed.controlled_substance === "yes" ? "Sí" : "No"
+                    }}
+                </p>
+                <p>
+                    <strong>Categoría:</strong> {{ selectedMed.category.name }}
+                </p>
+            </template>
+            <template #footer>
+                <FwbButton color="alternative" @click="isShowViewModal = false">
+                    Cerrar
+                </FwbButton>
+            </template>
+        </FwbModal>
+
+        <!-- Modal “Eliminar” -->
+        <!-- <FwbModal v-if="isShowDeleteModal" @close="isShowDeleteModal = false">
+            <template #header>Confirmar eliminación</template>
+            <template #body>
+                ¿Eliminar <strong>{{ selectedMed.name }}</strong
+                >?
+            </template>
+            <template #footer>
+                <FwbButton
+                    color="alternative"
+                    @click="isShowDeleteModal = false"
+                    :disabled="isDeleting"
+                >
+                    Cancelar
+                </FwbButton>
+                <FwbButton
+                    color="red"
+                    @click="submitDelete"
+                    :disabled="isDeleting"
+                >
+                    <span v-if="!isDeleting">Eliminar</span>
+                    <span v-else>Eliminando…</span>
+                </FwbButton>
+            </template>
+        </FwbModal> -->
+
+        <!-- Modal “Eliminar” -->
+        <FwbModal v-if="isShowDeleteModal" @close="closeDeleteModal">
+            <template #header>Confirmar eliminación</template>
+            <template #body>
+                <div class="text-center">
+                    <i
+                        class="fa-solid fa-exclamation-triangle text-red-500 text-4xl mb-4"
+                    ></i>
+                    <p class="text-lg">
+                        ¿Estás seguro de que deseas eliminar
+                        <strong>{{ selectedMed?.name }}</strong
+                        >?
+                    </p>
+                    <p class="text-sm text-gray-600 mt-2">
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>
+            </template>
+            <template #footer>
+                <div class="flex justify-end space-x-2">
+                    <FwbButton
+                        color="alternative"
+                        @click="closeDeleteModal"
+                        :disabled="isDeleting"
+                    >
+                        Cancelar
+                    </FwbButton>
+                    <FwbButton
+                        color="red"
+                        @click="submitDelete"
+                        :disabled="isDeleting"
+                    >
+                        <i
+                            v-if="isDeleting"
+                            class="fa-solid fa-spinner fa-spin mr-2"
+                        ></i>
+                        <i v-else class="fa-solid fa-trash mr-2"></i>
+                        <span v-if="!isDeleting">Eliminar</span>
+                        <span v-else>Eliminando…</span>
+                    </FwbButton>
+                </div>
+            </template>
+        </FwbModal>
 
         <!-- Modal Crear -->
         <FwbModal v-if="isCreateModal" @close="isCreateModal = false">

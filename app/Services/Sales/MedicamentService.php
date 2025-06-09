@@ -32,4 +32,10 @@ class MedicamentService
     {
         return $this->medicamentRepository->update($id, $data);
     }
+
+    public function deleteMedicament($id)
+    {
+        return $this->medicamentRepository->delete($id);
+    }
+
 }

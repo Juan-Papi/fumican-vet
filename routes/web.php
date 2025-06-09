@@ -76,10 +76,10 @@ Route::middleware([
 
         Route::group(['prefix' => 'medicaments'], function () {
             Route::get('/', [MedicamentController::class, 'index'])->name('medicament.index');
-            Route::get('create', [MedicamentController::class, 'create'])->name('medicament.create');
             Route::post('/', [MedicamentController::class, 'store'])->name('medicament.store');
             Route::get('{id}/edit', [MedicamentController::class, 'edit'])->name('medicament.edit');
             Route::put('{id}', [MedicamentController::class, 'update'])->name('medicament.update');
+            Route::post('{id}', [MedicamentController::class, 'destroy'])->name('medicament.destroy');
             Route::get('search', [MedicamentController::class, 'search'])->name('medicament.search');
         });
 
