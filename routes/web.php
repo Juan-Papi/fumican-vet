@@ -13,6 +13,7 @@ use App\Http\Controllers\Sales\MedicamentController;
 use App\Http\Controllers\Sales\WarehouseController;
 use App\Http\Controllers\Sales\PurchaseNoteController;
 use App\Http\Controllers\Sales\SalesNoteController;
+use App\Models\Sales\Category;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -66,10 +67,9 @@ Route::middleware([
 
         Route::group(['prefix' => 'categories'], function () {
             Route::get('/', [CategoryController::class, 'index'])->name('category.index');
-            Route::get('create', [CategoryController::class, 'create'])->name('category.create');
             Route::post('/', [CategoryController::class, 'store'])->name('category.store');
-            Route::get('{id}/edit', [CategoryController::class, 'edit'])->name('category.edit');
             Route::put('{id}', [CategoryController::class, 'update'])->name('category.update');
+            Route::delete('{id}', [CategoryController::class, 'destroy'])->name('category.destroy');
             Route::get('search', [CategoryController::class, 'search'])->name('supplier.search');
         });
 

@@ -28,6 +28,16 @@ class CategoryService
         return $this->categoryRepository->create($userData);
     }
 
+    public function updateCategory(int $id, array $userData)
+    {
+        return $this->categoryRepository->update($id, $userData);
+    }
+
+    public function deleteCategory(int $id)
+    {
+        return $this->categoryRepository->findById($id)->delete();
+    }
+
     public function search()
     {
         return $this->categoryRepository->search();
