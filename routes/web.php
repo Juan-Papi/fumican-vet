@@ -56,12 +56,11 @@ Route::middleware([
     });
 
     Route::group(['prefix' => 'sales'], function () {
-        Route::group(['prefix' => 'suppliers'], function () {
+        Route::prefix('suppliers')->group(function () {
             Route::get('/', [SupplierController::class, 'index'])->name('supplier.index');
-            Route::get('create', [SupplierController::class, 'create'])->name('supplier.create');
             Route::post('/', [SupplierController::class, 'store'])->name('supplier.store');
-            Route::get('{id}/edit', [SupplierController::class, 'edit'])->name('supplier.edit');
             Route::put('{id}', [SupplierController::class, 'update'])->name('supplier.update');
+            Route::delete('{id}', [SupplierController::class, 'destroy'])->name('supplier.destroy');
             Route::get('search', [SupplierController::class, 'search'])->name('supplier.search');
         });
 

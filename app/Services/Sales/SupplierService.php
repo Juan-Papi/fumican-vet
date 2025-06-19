@@ -23,6 +23,16 @@ class SupplierService
         return $this->supplierRepository->create($userData);
     }
 
+    public function updateSupplier(int $id, array $userData)
+    {
+        return $this->supplierRepository->update($id, $userData);
+    }
+
+    public function deleteSupplier(int $id)
+    {
+        return $this->supplierRepository->findById($id)->delete();
+    }
+
     public function search()
     {
         return $this->supplierRepository->search();
