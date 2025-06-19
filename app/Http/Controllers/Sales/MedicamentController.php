@@ -9,6 +9,7 @@ use App\Http\Requests\Sales\StoreMedicamentRequest;
 use App\Services\Sales\WarehouseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 
 class MedicamentController extends Controller
@@ -28,25 +29,28 @@ class MedicamentController extends Controller
         ]);
     }
 
-    public function store(StoreMedicamentRequest $request)
+    public function store(StoreMedicamentRequest $request): JsonResponse
     {
-        $this->medicamentService->createMedicament($request->validated());
-        return redirect()->route('medicament.index');
+        $med = $this->medicamentService->createMedicament($request->validated());
+        return response()->json([
+            'message'    => 'Medicamento creado correctamente',
+            'medicament' => $med
+        ], 201);
     }
 
-    public function update(StoreMedicamentRequest $request, int $id)
+    public function update(StoreMedicamentRequest $request, int $id): JsonResponse
     {
         $this->medicamentService->updateMedicament($id, $request->validated());
-
-        return redirect()
-            ->route('medicament.index')
-            ->with('success', 'Medicamento actualizado correctamente');
+        return response()->json([
+            'message' => 'Medicamento actualizado correctamente'
+        ]);
     }
 
-    public function destroy(int $id, Request $request)
+    public function destroy(int $id, Request $request): JsonResponse
     {
         $this->medicamentService->deleteMedicament($id);
-
-        return redirect()->route('medicament.index')->with('success', 'Medicamento eliminado correctamente');
+        return response()->json([
+            'message' => 'Medicamento eliminado correctamente'
+        ]);
     }
 }
