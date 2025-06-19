@@ -10,6 +10,7 @@ use App\Services\Sales\MedicamentService;
 use App\Http\Requests\Sales\StoreWarehouseRequest;
 use App\Http\Requests\Sales\UpdateInventoryRequest;
 use App\Models\Sales\Inventory;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 
 class WarehouseController extends Controller
@@ -24,11 +25,16 @@ class WarehouseController extends Controller
         ]);
     }
 
-    public function store(StoreWarehouseRequest $request)
+    public function store(StoreWarehouseRequest $request): JsonResponse
     {
-        $this->warehouseService->createWarehouse($request->validated());
-        return redirect()->route('warehouse.index');
+        $warehouse = $this->warehouseService->createWarehouse($request->validated());
+
+        return response()->json([
+            'message'   => "Almacén «{$warehouse->name}» creado correctamente",
+            'warehouse' => $warehouse,
+        ], 201);
     }
+
 
     public function show(int $warehouseId, InventoryService $inventoryService)
     {
@@ -41,17 +47,33 @@ class WarehouseController extends Controller
     }
 
     // Actualizar almacén
-    public function update(StoreWarehouseRequest $request, int $id)
+    public function update(StoreWarehouseRequest $request, int $id): JsonResponse
     {
-        $this->warehouseService->updateWarehouse($id, $request->validated());
-        return redirect()->route('warehouse.index')->with('success', 'Almacén actualizado correctamente');
+        // Esto devuelve un int…
+        $rows = $this->warehouseService->updateWarehouse($id, $request->validated());
+        // …así que vuelves a buscar el modelo
+        $warehouse = $this->warehouseService->getWarehouseById($id);
+
+        return response()->json([
+            'message'   => "Almacén «{$warehouse->name}» actualizado correctamente",
+            'warehouse' => $warehouse,
+        ]);
     }
 
+
     // Eliminar almacén (usamos POST para facilitar integración con Inertia y evitar problemas con DELETE)
-    public function destroy(int $id)
+    public function destroy(int $id): JsonResponse
     {
+        // Primero obtenemos el modelo para extraer el nombre
+        $warehouse = $this->warehouseService->getWarehouseById($id);
+        $name      = $warehouse->name;
+
+        // Luego lo borramos
         $this->warehouseService->deleteWarehouse($id);
-        return redirect()->route('warehouse.index')->with('success', 'Almacén eliminado correctamente');
+
+        return response()->json([
+            'message' => "Almacén «{$name}» eliminado correctamente",
+        ]);
     }
 
 
