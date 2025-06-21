@@ -97,6 +97,7 @@ const submit = async () => {
                     <select
                         v-model="form.supplier_id"
                         class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                        required
                     >
                         <option value="">Seleccionar</option>
                         <option
@@ -116,6 +117,7 @@ const submit = async () => {
                     <select
                         v-model="form.warehouse_id"
                         class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                        required
                     >
                         <option value="">Seleccionar</option>
                         <option
@@ -129,18 +131,32 @@ const submit = async () => {
                 </div>
                 <!-- Medicamentos -->
                 <div class="my-6">
-                    <h3 class="text-xl font-semibold text-gray-600 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">
                         Medicamentos
                     </h3>
+
+                    <!-- Header de columnas -->
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4 font-medium text-gray-700 mb-1"
+                    >
+                        <div>Medicamento</div>
+                        <div class="text-right">Cantidad</div>
+                        <div class="text-right">Precio (Bs)</div>
+                        <div class="text-right">Subtotal</div>
+                    </div>
+
+                    <!-- Filas dinámicas -->
                     <div
                         v-for="(med, i) in form.medicaments"
                         :key="i"
-                        class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-center"
                     >
+                        <!-- Select medicamento -->
                         <select
                             v-model="med.id"
                             @change="updateTotal"
                             class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            required
                         >
                             <option value="">Seleccionar</option>
                             <option
@@ -151,22 +167,32 @@ const submit = async () => {
                                 {{ m.name }}
                             </option>
                         </select>
+
+                        <!-- Input cantidad -->
                         <input
                             type="number"
                             v-model.number="med.quantity"
                             min="1"
+                            placeholder="Cant."
                             @input="updateTotal"
-                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500 text-right"
                         />
+
+                        <!-- Input precio -->
                         <input
                             type="number"
                             v-model.number="med.purchase_price"
                             step="0.01"
                             min="0"
+                            placeholder="Precio"
                             @input="updateTotal"
-                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500 text-right"
                         />
-                        <div class="flex items-center justify-between">
+
+                        <!-- Subtotal y eliminar -->
+                        <div
+                            class="flex items-center justify-between space-x-2"
+                        >
                             <span class="font-semibold">{{
                                 med.subtotal.toFixed(2)
                             }}</span>
@@ -174,15 +200,17 @@ const submit = async () => {
                                 type="button"
                                 @click="removeMed(i)"
                                 class="text-red-600 hover:text-red-800"
+                                title="Eliminar fila"
                             >
-                                Eliminar
+                                &times;
                             </button>
                         </div>
                     </div>
+
                     <button
                         type="button"
                         @click="addMed"
-                        class="text-green-600 hover:text-green-800"
+                        class="text-green-600 hover:text-green-800 font-medium"
                     >
                         + Agregar Medicamento
                     </button>
@@ -193,10 +221,10 @@ const submit = async () => {
                         >Total General</label
                     >
                     <input
-                        type="number"
+                        type="text"
                         :value="form.total_amount.toFixed(2)"
                         readonly
-                        class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                        class="mt-1 block w-full p-3 border rounded-md bg-gray-100 text-right"
                     />
                 </div>
                 <!-- Botones -->
@@ -204,9 +232,9 @@ const submit = async () => {
                     <FwbButton color="alternative" @click="cancel"
                         >Cancelar</FwbButton
                     >
-                    <FwbButton type="submit" :disabled="form.processing">{{
-                        actionTitle
-                    }}</FwbButton>
+                    <FwbButton type="submit" :disabled="form.processing">
+                        {{ actionTitle }}
+                    </FwbButton>
                 </div>
             </form>
         </div>

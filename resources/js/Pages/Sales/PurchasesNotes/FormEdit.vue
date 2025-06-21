@@ -14,10 +14,10 @@ const props = defineProps({
     purchaseNoteDetails: Array,
 });
 
-// Ensure numeric total
+// Inicializar total desde props
 const initialTotal = parseFloat(props.purchaseNote.total_amount) || 0;
 
-// Form state populated from props
+// Estado del formulario pre-llenado
 const form = ref({
     id: props.purchaseNote.id,
     supplier_id: props.purchaseNote.supplier_id,
@@ -33,23 +33,26 @@ const form = ref({
     processing: false,
 });
 
-// Toast state
+// Toast
 const showToast = ref(false);
 const toastMsg = ref("");
 const toastType = ref("success");
+
+// Título dinámico
 const actionTitle = computed(() => "Editar");
 
-// Helpers
-const updateTotal = () => {
+// Recalcular subtotales y total
+function updateTotal() {
     let total = 0;
     form.value.medicaments.forEach((m) => {
         m.subtotal = Number(m.quantity) * Number(m.purchase_price);
         total += m.subtotal;
     });
     form.value.total_amount = total;
-};
+}
 
-const addMed = () => {
+// Agregar/quitar fila
+function addMed() {
     form.value.medicaments.push({
         id: "",
         quantity: 1,
@@ -57,16 +60,19 @@ const addMed = () => {
         subtotal: 0,
     });
     updateTotal();
-};
-
-const removeMed = (i) => {
+}
+function removeMed(i) {
     form.value.medicaments.splice(i, 1);
     updateTotal();
-};
+}
 
-const cancel = () => router.get(route("purchase.index"));
+// Cancelar y volver al índice
+function cancel() {
+    router.get(route("purchase.index"));
+}
 
-const submit = async () => {
+// Enviar PUT
+async function submit() {
     form.value.processing = true;
     try {
         const { data } = await axios.put(
@@ -85,7 +91,7 @@ const submit = async () => {
     } finally {
         form.value.processing = false;
     }
-};
+}
 </script>
 
 <template>
@@ -100,6 +106,7 @@ const submit = async () => {
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">
                 {{ actionTitle }} Nota de Compra
             </h2>
+
             <form @submit.prevent="submit">
                 <!-- Proveedor -->
                 <div class="mb-6">
@@ -108,6 +115,7 @@ const submit = async () => {
                     >
                     <select
                         v-model="form.supplier_id"
+                        required
                         class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
                     >
                         <option value="">Seleccionar</option>
@@ -120,6 +128,7 @@ const submit = async () => {
                         </option>
                     </select>
                 </div>
+
                 <!-- Almacén -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-600"
@@ -127,6 +136,7 @@ const submit = async () => {
                     >
                     <select
                         v-model="form.warehouse_id"
+                        required
                         class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
                     >
                         <option value="">Seleccionar</option>
@@ -139,19 +149,34 @@ const submit = async () => {
                         </option>
                     </select>
                 </div>
+
                 <!-- Medicamentos -->
                 <div class="my-6">
-                    <h3 class="text-xl font-semibold text-gray-600 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">
                         Medicamentos
                     </h3>
+
+                    <!-- Encabezado de columnas -->
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4 font-medium text-gray-700 mb-1"
+                    >
+                        <div>Medicamento</div>
+                        <div class="text-right">Cantidad</div>
+                        <div class="text-right">Precio (Bs)</div>
+                        <div class="text-right">Subtotal</div>
+                    </div>
+
+                    <!-- Filas -->
                     <div
                         v-for="(med, i) in form.medicaments"
                         :key="i"
-                        class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-center"
                     >
+                        <!-- Select medicamento -->
                         <select
                             v-model="med.id"
                             @change="updateTotal"
+                            required
                             class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
                         >
                             <option value="">Seleccionar</option>
@@ -163,22 +188,34 @@ const submit = async () => {
                                 {{ m.name }}
                             </option>
                         </select>
+
+                        <!-- Input cantidad -->
                         <input
                             type="number"
                             v-model.number="med.quantity"
                             min="1"
+                            placeholder="Cant."
                             @input="updateTotal"
-                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            required
+                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500 text-right"
                         />
+
+                        <!-- Input precio -->
                         <input
                             type="number"
                             v-model.number="med.purchase_price"
                             step="0.01"
                             min="0"
+                            placeholder="Precio"
                             @input="updateTotal"
-                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            required
+                            class="block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500 text-right"
                         />
-                        <div class="flex items-center justify-between">
+
+                        <!-- Subtotal y borrar -->
+                        <div
+                            class="flex items-center justify-between space-x-2"
+                        >
                             <span class="font-semibold">{{
                                 med.subtotal.toFixed(2)
                             }}</span>
@@ -186,39 +223,43 @@ const submit = async () => {
                                 type="button"
                                 @click="removeMed(i)"
                                 class="text-red-600 hover:text-red-800"
+                                title="Eliminar fila"
                             >
-                                Eliminar
+                                &times;
                             </button>
                         </div>
                     </div>
+
                     <button
                         type="button"
                         @click="addMed"
-                        class="text-green-600 hover:text-green-800"
+                        class="text-green-600 hover:text-green-800 font-medium"
                     >
                         + Agregar Medicamento
                     </button>
                 </div>
+
                 <!-- Total general -->
                 <div class="my-6">
                     <label class="block text-sm font-medium text-gray-600"
                         >Total General</label
                     >
                     <input
-                        type="number"
+                        type="text"
                         :value="form.total_amount.toFixed(2)"
                         readonly
-                        class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                        class="mt-1 block w-full p-3 border rounded-md bg-gray-100 text-right"
                     />
                 </div>
+
                 <!-- Botones -->
                 <div class="flex justify-end space-x-4">
                     <FwbButton color="alternative" @click="cancel"
                         >Cancelar</FwbButton
                     >
-                    <FwbButton type="submit" :disabled="form.processing">{{
-                        actionTitle
-                    }}</FwbButton>
+                    <FwbButton type="submit" :disabled="form.processing">
+                        {{ actionTitle }}
+                    </FwbButton>
                 </div>
             </form>
         </div>
