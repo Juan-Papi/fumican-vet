@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
+use PDF;
 
 class MedicamentController extends Controller
 {
@@ -80,5 +81,29 @@ class MedicamentController extends Controller
         return response()->json([
             'message' => 'Medicamento eliminado correctamente'
         ]);
+    }
+
+    public function generatePdf(Request $request)
+    {
+        // 1) Recuperar filtros de la querystring
+        $filters = $request->only([
+            'name',
+            'dosage',
+            'manufacturer',
+            'expiration_from',
+            'expiration_to',
+            'controlled_substance',
+            'category_id',
+        ]);
+
+        // 2) Pedir todos los medicamentos filtrados (sin paginar)
+        $medicaments = $this->medicamentService->getFilteredMedicaments($filters);
+
+        // 3) Cargar la vista Blade para PDF
+        $pdf = PDF::loadView('pdf.medicaments_report', compact('medicaments', 'filters'))
+            ->setPaper('a4', 'landscape');
+
+        // 4) Entregar el stream listo para imprimir
+        return $pdf->stream('reporte_medicamentos_' . now()->format('Ymd') . '.pdf');
     }
 }

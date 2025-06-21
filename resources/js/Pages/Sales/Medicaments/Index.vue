@@ -30,17 +30,15 @@ const currentPage = ref(props.medicaments.current_page);
 
 // new:
 watch(currentPage, (page) => {
-  // always include filters + the new page
-  const params = { ...filters.value, page };
+    // always include filters + the new page
+    const params = { ...filters.value, page };
 
-  // hit the same “search” endpoint even if filters are empty
-  router.get(
-    route("medicament.search"),
-    params,
-    { preserveState: true, replace: true }
-  );
+    // hit the same “search” endpoint even if filters are empty
+    router.get(route("medicament.search"), params, {
+        preserveState: true,
+        replace: true,
+    });
 });
-
 
 // Toast
 const showToast = ref(false);
@@ -314,6 +312,19 @@ function resetFilters() {
                 <i class="fa-solid fa-plus mr-2"></i> Nuevo Medicamento
             </FwbButton>
         </div>
+        <div>
+            <FwbButton
+                tag="a"
+                :href="route('medicament.report', filters)"
+                target="_blank"
+                color="green"
+                class="ml-4"
+            >
+                <i class="fa-solid fa-file-pdf mr-2"></i> Generar PDF
+            </FwbButton>
+        </div>
+
+        <div class="h-5"></div>
 
         <!-- Filter bar -->
         <form

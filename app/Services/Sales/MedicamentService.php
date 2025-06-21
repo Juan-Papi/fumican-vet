@@ -37,4 +37,9 @@ class MedicamentService
     {
         return $this->medicamentRepository->delete($id);
     }
+
+    public function getFilteredMedicaments(array $filters)
+    {
+        return $this->medicamentRepository->filtered($filters);
+    }
 }

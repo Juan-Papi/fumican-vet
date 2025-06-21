@@ -80,6 +80,8 @@ Route::middleware([
             Route::put('{id}', [MedicamentController::class, 'update'])->name('medicament.update');
             Route::delete('{id}', [MedicamentController::class, 'destroy'])->name('medicament.destroy');
             Route::get('search', [MedicamentController::class, 'search'])->name('medicament.search');
+            Route::get('medicaments/report', [MedicamentController::class, 'generatePdf'])
+                ->name('medicament.report');
         });
 
         Route::group(['prefix' => 'warehouses'], function () {
