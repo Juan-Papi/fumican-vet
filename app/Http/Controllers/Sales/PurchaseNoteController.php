@@ -101,13 +101,15 @@ class PurchaseNoteController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $purchaseNote = $this->purchaseNoteService->getPurchaseNoteById($id);
-        $purchaseNoteDetails = $this->purchaseNoteDetailService->getPurchaseNoteDetailsByPurchaseNoteId($id);
+        $purchaseNoteDetails = $this->purchaseNoteDetailService
+            ->getPurchaseNoteDetailsByPurchaseNoteId($id);
 
-        return Inertia::render('Sales/PurchasesNotes/Show', [
-            'purchaseNote' => $purchaseNote,
+        // Siempre respondemos JSON:
+        return response()->json([
+            'purchaseNote'        => $purchaseNote,
             'purchaseNoteDetails' => $purchaseNoteDetails,
         ]);
     }

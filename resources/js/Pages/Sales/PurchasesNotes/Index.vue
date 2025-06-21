@@ -1,4 +1,3 @@
-// Index.vue
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import axios from "axios";
@@ -66,12 +65,25 @@ async function deletePurchase() {
 // View modal state
 const isShowModal = ref(false);
 const selectedPurchase = ref(null);
+const selectedDetails = ref([]);
+
 function showModal(show = true) {
     isShowModal.value = show;
 }
-function viewPurchase(purchase) {
-    selectedPurchase.value = purchase;
-    showModal();
+
+async function viewPurchase(purchase) {
+    try {
+        const { data } = await axios.get(route("purchase.show", purchase.id), {
+            headers: { Accept: "application/json" },
+        });
+        selectedPurchase.value = data.purchaseNote;
+        selectedDetails.value = data.purchaseNoteDetails;
+        showModal();
+    } catch (e) {
+        toastType.value = "danger";
+        toastMsg.value = "Error cargando detalle";
+        showToast.value = true;
+    }
 }
 
 function printPurchase(id) {
@@ -186,9 +198,60 @@ function printPurchase(id) {
 
         <!-- View Modal -->
         <FwbModal v-if="isShowModal" @close="showModal(false)">
-            <template #header>Detalle de Compra</template>
+            <template #header>
+                Detalle de Compra #{{ selectedPurchase.id }}
+            </template>
             <template #body>
-                <pre>{{ selectedPurchase }}</pre>
+                <p>
+                    <strong>Fecha:</strong>
+                    {{ selectedPurchase.purchase_date }} &nbsp;&nbsp;
+                    <strong>Proveedor:</strong>
+                    {{ selectedPurchase.supplier.name }}
+                </p>
+                <div class="overflow-x-auto mt-4">
+                    <FwbTable class="min-w-full">
+                        <FwbTableHead>
+                            <FwbTableHeadCell>Médicamento</FwbTableHeadCell>
+                            <FwbTableHeadCell class="text-right"
+                                >Cant.</FwbTableHeadCell
+                            >
+                            <FwbTableHeadCell class="text-right"
+                                >Precio</FwbTableHeadCell
+                            >
+                            <FwbTableHeadCell class="text-right"
+                                >Subtotal</FwbTableHeadCell
+                            >
+                        </FwbTableHead>
+                        <FwbTableBody>
+                            <FwbTableRow
+                                v-for="d in selectedDetails"
+                                :key="d.id"
+                            >
+                                <FwbTableCell>{{
+                                    d.medicament.name
+                                }}</FwbTableCell>
+                                <FwbTableCell class="text-right">{{
+                                    d.quantity
+                                }}</FwbTableCell>
+                                <FwbTableCell class="text-right"
+                                    >{{ d.purchase_price }} Bs</FwbTableCell
+                                >
+                                <FwbTableCell class="text-right"
+                                    >{{ d.subtotal }} Bs</FwbTableCell
+                                >
+                            </FwbTableRow>
+                        </FwbTableBody>
+                    </FwbTable>
+                </div>
+                <div class="mt-4 text-right">
+                    <span class="font-semibold text-lg">
+                        Total:
+                        {{
+                            parseFloat(selectedPurchase.total_amount).toFixed(2)
+                        }}
+                        Bs
+                    </span>
+                </div>
             </template>
             <template #footer>
                 <FwbButton color="alternative" @click="showModal(false)"
