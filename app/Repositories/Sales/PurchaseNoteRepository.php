@@ -10,7 +10,7 @@ class PurchaseNoteRepository
     public function getAll()
     {
         return PurchaseNote::orderBy('updated_at', 'desc')
-            ->paginate();
+            ->paginate(10);
     }
 
     public function findById($id)

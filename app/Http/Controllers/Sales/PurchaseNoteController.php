@@ -88,10 +88,16 @@ class PurchaseNoteController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('purchase.index')->with('success', 'Nota de compra creada exitosamente');
+            return response()->json([
+                'message' => 'Nota de compra creada exitosamente',
+                'purchaseNote' => $purchaseNote, // opcional
+            ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Error al crear la nota de compra: ' . $e->getMessage()]);
+            return response()->json([
+                'message' => 'Error al crear la nota de compra',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -245,10 +251,15 @@ class PurchaseNoteController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('purchase.index')->with('success', 'Nota de compra actualizada exitosamente');
+            return response()->json([
+                'message' => 'Nota de compra actualizada exitosamente'
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Error al actualizar la nota de compra: ' . $e->getMessage()]);
+            return response()->json([
+                'message' => 'Error al actualizar la nota de compra',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -273,12 +284,15 @@ class PurchaseNoteController extends Controller
             $this->purchaseNoteService->deletePurchaseNoteById($id);
 
             DB::commit();
-            return redirect()->route('purchase.index')
-                ->with('success', 'Nota de compra eliminada exitosamente');
+            return response()->json([
+                'message' => "Nota de compra #{$id} eliminada correctamente",
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()
-                ->withErrors(['error' => 'Error al eliminar la nota de compra: ' . $e->getMessage()]);
+            return response()->json([
+                'message' => 'Error al eliminar la nota de compra',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 }
