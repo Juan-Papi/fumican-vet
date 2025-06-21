@@ -11,7 +11,7 @@ class MedicamentRepository
     {
         return Medicament::orderBy('updated_at', 'desc')
             ->with('category')
-            ->paginate();
+            ->paginate(15);
     }
 
     public function findById($id)
@@ -29,19 +29,38 @@ class MedicamentRepository
         return Medicament::where('id', $id)->update($data);
     }
 
-    public function search()
+    public function search(array $filters)
     {
-        $search = request('search');
-        return Medicament::where(function ($query) use ($search) {
-            $query->where('name', 'like', "%$search%")
-                ->orWhere('dosage', 'like', "%$search%")
-                ->orWhere('manufacturer', 'like', "%$search%");
-        })
-            ->orWhereHas('category', function ($query) use ($search) {
-                $query->where('name', 'like', "%$search%");
-            })
-            ->take(5)
-            ->get();
+        $query = Medicament::with('category');
+
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', "%{$filters['name']}%");
+        }
+        if (!empty($filters['dosage'])) {
+            $query->where('dosage', 'like', "%{$filters['dosage']}%");
+        }
+        if (!empty($filters['manufacturer'])) {
+            $query->where('manufacturer', 'like', "%{$filters['manufacturer']}%");
+        }
+        if (!empty($filters['expiration_from'])) {
+            $query->whereDate('expiration_date', '>=', $filters['expiration_from']);
+        }
+        if (!empty($filters['expiration_to'])) {
+            $query->whereDate('expiration_date', '<=', $filters['expiration_to']);
+        }
+        if (isset($filters['controlled_substance']) && $filters['controlled_substance'] !== '') {
+            $query->where('controlled_substance', $filters['controlled_substance']);
+        }
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        $perPage = $filters['per_page'] ?? 15;
+
+        return $query
+            ->orderBy('updated_at', 'desc')
+            ->paginate($perPage)
+            ->appends($filters);
     }
 
     public function delete($id)

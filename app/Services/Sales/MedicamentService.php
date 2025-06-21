@@ -23,9 +23,9 @@ class MedicamentService
         return $this->medicamentRepository->create($userData);
     }
 
-    public function search()
+    public function search(array $filters)
     {
-        return $this->medicamentRepository->search();
+        return $this->medicamentRepository->search($filters);
     }
 
     public function updateMedicament($id, array $data)
@@ -37,5 +37,4 @@ class MedicamentService
     {
         return $this->medicamentRepository->delete($id);
     }
-
 }

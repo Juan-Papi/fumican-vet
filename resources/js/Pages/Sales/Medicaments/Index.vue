@@ -2,7 +2,7 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { ref, watch } from "vue";
 import axios from "axios";
-import { router } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import {
     FwbTable,
     FwbTableHead,
@@ -27,9 +27,20 @@ const props = defineProps({
 
 // Pagination
 const currentPage = ref(props.medicaments.current_page);
+
+// new:
 watch(currentPage, (page) => {
-    router.get(route("medicament.index"), { page }, { preserveState: true });
+  // always include filters + the new page
+  const params = { ...filters.value, page };
+
+  // hit the same “search” endpoint even if filters are empty
+  router.get(
+    route("medicament.search"),
+    params,
+    { preserveState: true, replace: true }
+  );
 });
+
 
 // Toast
 const showToast = ref(false);
@@ -242,6 +253,49 @@ function submitAddBatch() {
         }
     );
 }
+
+// grab any existing filters from server props
+const page = usePage();
+const initialFilters = page.props.filters || {};
+
+const filters = ref({
+    name: initialFilters.name || "",
+    dosage: initialFilters.dosage || "",
+    manufacturer: initialFilters.manufacturer || "",
+    expiration_from: initialFilters.expiration_from || "",
+    expiration_to: initialFilters.expiration_to || "",
+    controlled_substance: initialFilters.controlled_substance || "",
+    category_id: initialFilters.category_id || "",
+    per_page: initialFilters.per_page || 15,
+});
+
+function applyFilters() {
+    router.get(route("medicament.search"), filters.value, {
+        preserveState: true,
+        replace: true,
+    });
+}
+
+function resetFilters() {
+    Object.assign(filters.value, {
+        name: "",
+        dosage: "",
+        manufacturer: "",
+        expiration_from: "",
+        expiration_to: "",
+        controlled_substance: "",
+        category_id: "",
+        per_page: 15,
+    });
+    router.get(
+        route("medicament.index"),
+        {},
+        {
+            preserveState: true,
+            replace: true,
+        }
+    );
+}
 </script>
 
 <template>
@@ -260,6 +314,86 @@ function submitAddBatch() {
                 <i class="fa-solid fa-plus mr-2"></i> Nuevo Medicamento
             </FwbButton>
         </div>
+
+        <!-- Filter bar -->
+        <form
+            @submit.prevent="applyFilters"
+            class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"
+        >
+            <div>
+                <label class="block text-sm">Nombre</label>
+                <input
+                    v-model="filters.name"
+                    type="text"
+                    class="w-full p-2 border rounded"
+                    placeholder="Buscar nombre…"
+                />
+            </div>
+            <div>
+                <label class="block text-sm">Dosificación</label>
+                <input
+                    v-model="filters.dosage"
+                    type="text"
+                    class="w-full p-2 border rounded"
+                    placeholder="Buscar dosificación…"
+                />
+            </div>
+            <div>
+                <label class="block text-sm">Fabricante</label>
+                <input
+                    v-model="filters.manufacturer"
+                    type="text"
+                    class="w-full p-2 border rounded"
+                    placeholder="Buscar fabricante…"
+                />
+            </div>
+            <div>
+                <label class="block text-sm">Categoría</label>
+                <select
+                    v-model="filters.category_id"
+                    class="w-full p-2 border rounded"
+                >
+                    <option value="">Todas</option>
+                    <option v-for="c in categories" :key="c.id" :value="c.id">
+                        {{ c.name }}
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm">Expiración desde</label>
+                <input
+                    v-model="filters.expiration_from"
+                    type="date"
+                    class="w-full p-2 border rounded"
+                />
+            </div>
+            <div>
+                <label class="block text-sm">Expiración hasta</label>
+                <input
+                    v-model="filters.expiration_to"
+                    type="date"
+                    class="w-full p-2 border rounded"
+                />
+            </div>
+            <div>
+                <label class="block text-sm">Controlada</label>
+                <select
+                    v-model="filters.controlled_substance"
+                    class="w-full p-2 border rounded"
+                >
+                    <option value="">Todas</option>
+                    <option value="yes">Sí</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            <div class="flex items-end space-x-2">
+                <FwbButton color="purple" type="submit">Filtrar</FwbButton>
+                <FwbButton color="alternative" @click.prevent="resetFilters"
+                    >Limpiar</FwbButton
+                >
+            </div>
+        </form>
 
         <!-- Tabla -->
         <FwbTable>

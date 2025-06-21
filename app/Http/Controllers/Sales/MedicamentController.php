@@ -17,15 +17,43 @@ class MedicamentController extends Controller
 
     public function __construct(protected MedicamentService $medicamentService, protected CategoryService $categoryService, protected WarehouseService $warehouseService) {}
 
-    public function index()
+    public function index(Request $request)
     {
+        // no filters here → just show everything paginated
         $medicaments = $this->medicamentService->getAllMedicaments();
         $categories  = $this->categoryService->getAllCategoriesWithoutPaginate();
-        $warehouses = $this->warehouseService->getAllWarehousesWithoutPaginate();
+        $warehouses  = $this->warehouseService->getAllWarehousesWithoutPaginate();
+
         return Inertia::render('Sales/Medicaments/Index', [
             'medicaments' => $medicaments,
             'categories'  => $categories,
             'warehouses'  => $warehouses,
+            'filters'     => null,
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $filters = $request->only([
+            'name',
+            'dosage',
+            'manufacturer',
+            'expiration_from',
+            'expiration_to',
+            'controlled_substance',
+            'category_id',
+            'per_page',
+        ]);
+
+        $medicaments = $this->medicamentService->search($filters);
+        $categories  = $this->categoryService->getAllCategoriesWithoutPaginate();
+        $warehouses  = $this->warehouseService->getAllWarehousesWithoutPaginate();
+
+        return Inertia::render('Sales/Medicaments/Index', [
+            'medicaments' => $medicaments,
+            'categories'  => $categories,
+            'warehouses'  => $warehouses,
+            'filters'     => $filters,
         ]);
     }
 
