@@ -9,8 +9,9 @@ class SalesNoteRepository
 
     public function getAll()
     {
-        return SalesNote::orderBy('updated_at', 'desc')
-            ->paginate();
+        return SalesNote::with(['warehouse', 'user', 'customer', 'salesNoteDetails.medicament'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate(15);
     }
 
 

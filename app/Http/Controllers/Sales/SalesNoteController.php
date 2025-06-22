@@ -15,17 +15,46 @@ use App\Models\Sales\SalesNote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 use PDF;
 
 class SalesNoteController extends Controller
 {
-    public function __construct(protected SalesNoteService $salesNoteService, protected InventoryService $inventoryService) {}
+    public function __construct(protected SalesNoteService $salesNoteService, protected InventoryService $inventoryService, protected WarehouseService $warehouseService, protected CustomerService $customerService) {}
 
     public function index()
     {
         $sales = $this->salesNoteService->getAllSalesNote();
+        $customers = $this->customerService->getAllCustomers()->items();
+        $warehouses = $this->warehouseService->getAllWarehouses()->items();
+
         return Inertia::render('Sales/SalesNotes/Index', [
-            'sales' => $sales,
+            'sales'      => $sales,
+            'customers'  => $customers,
+            'warehouses' => $warehouses,
+            'filters'    => null,
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $filters = $request->only([
+            'customer_id',
+            'warehouse_id',
+            'date_from',
+            'date_to',
+            'per_page',
+        ]);
+        $sales = $this->salesNoteService->getFilteredSalesNotes($filters);
+
+        $customers = $this->customerService->getAllCustomers()->items();
+        $warehouses = $this->warehouseService->getAllWarehouses()->items();
+
+        return Inertia::render('Sales/SalesNotes/Index', [
+            'sales'      => $sales,
+            'customers'  => $customers,
+            'warehouses' => $warehouses,
+            'filters'    => $filters,
         ]);
     }
 
@@ -61,7 +90,8 @@ class SalesNoteController extends Controller
         $salesNote = $this->salesNoteService->getSalesNoteById($id);
         $salesNoteDetails = $salesNoteDetailService->getSalesNoteDetailsBySalesNoteId($id);
 
-        return Inertia::render('Sales/SalesNotes/Show', [
+        // SIEMPRE responde JSON
+        return response()->json([
             'salesNote' => $salesNote,
             'salesNoteDetails' => $salesNoteDetails,
         ]);
@@ -90,7 +120,6 @@ class SalesNoteController extends Controller
         ]);
     }
 
-
     public function update(UpdateSalesNoteRequest $request, $id)
     {
         $data = $request->validated();
@@ -116,30 +145,41 @@ class SalesNoteController extends Controller
     {
         DB::beginTransaction();
         try {
-            // 1) Traer la nota de venta con sus detalles
             $salesNote = SalesNote::with('salesNoteDetails')->findOrFail($id);
-
-            // 2) Para cada detalle, restaurar el stock consumido y borrar el detalle
             foreach ($salesNote->salesNoteDetails as $detail) {
-                // Restaura el stock lote-a-lote según lo que consumió ese detalle
                 $this->inventoryService->restoreStockForSalesDetail($detail->id);
-
-                // Borra el detalle de la venta
                 $detail->delete();
             }
-
-            // 3) Borrar la nota de venta
             $salesNote->delete();
 
             DB::commit();
-            return redirect()
-                ->route('sales-note.index')
-                ->with('success', 'Venta eliminada exitosamente');
+            // RESPONDE JSON (no redirect)
+            return response()->json([
+                'message' => "Venta eliminada exitosamente",
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()
-                ->back()
-                ->withErrors(['error' => 'Error al eliminar la venta: ' . $e->getMessage()]);
+            return response()->json([
+                'message' => 'Error al eliminar la venta',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
+    }
+
+    public function report(Request $request)
+    {
+        $filters = $request->only([
+            'customer_id',
+            'warehouse_id',
+            'date_from',
+            'date_to',
+        ]);
+
+        $sales = $this->salesNoteService->getFilteredSalesNotes($filters, false);
+
+        $pdf = PDF::loadView('pdf.sales_notes_report', compact('sales', 'filters'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('reporte_ventas_' . now()->format('Ymd') . '.pdf');
     }
 }

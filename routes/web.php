@@ -119,14 +119,17 @@ Route::middleware([
             Route::delete('{id}', [PurchaseNoteController::class, 'destroy'])->name('purchase.destroy');
             Route::get('/purchase/search', [PurchaseNoteController::class, 'search'])->name('purchase.search');
         });
+
         Route::group(['prefix' => 'sales-note'], function () {
-            Route::get('/', [SalesNoteController::class, 'index'])->name('sales-note.index');
+            Route::get('/', [SalesNoteController::class, 'index'])->name('sales-note.index'); // /sales-note
             Route::get('create', [SalesNoteController::class, 'create'])->name('sales-note.create');
             Route::post('/', [SalesNoteController::class, 'store'])->name('sales-note.store');
+            Route::get('search', [SalesNoteController::class, 'search'])->name('sales-note.search');
+            Route::get('report', [SalesNoteController::class, 'report'])->name('sales-note.report');
             Route::get('{id}/edit', [SalesNoteController::class, 'edit'])->name('sales-note.edit');
             Route::put('{id}', [SalesNoteController::class, 'update'])->name('sales-note.update');
             Route::get('{id}', [SalesNoteController::class, 'show'])->name('sales-note.show');
-            Route::get('sales-note/{id}/pdf', [SalesNoteController::class, 'generatePdf'])->name('sales-note.pdf');
+            Route::get('{id}/pdf', [SalesNoteController::class, 'generatePdf'])->name('sales-note.pdf');
             Route::delete('{id}', [SalesNoteController::class, 'destroy'])->name('sales-note.destroy');
         });
     });

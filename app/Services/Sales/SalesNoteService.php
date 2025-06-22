@@ -103,4 +103,29 @@ class SalesNoteService
             throw $e;
         }
     }
+
+    public function getFilteredSalesNotes($filters, $paginate = true)
+    {
+        $query = SalesNote::with(['customer', 'warehouse', 'user']);
+
+        if (!empty($filters['customer_id'])) {
+            $query->where('customer_id', $filters['customer_id']);
+        }
+        if (!empty($filters['warehouse_id'])) {
+            $query->where('warehouse_id', $filters['warehouse_id']);
+        }
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('sale_date', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('sale_date', '<=', $filters['date_to']);
+        }
+
+        $perPage = $filters['per_page'] ?? 15;
+        if ($paginate) {
+            return $query->orderBy('id', 'desc')->paginate($perPage);
+        } else {
+            return $query->orderBy('id', 'desc')->get();
+        }
+    }
 }
