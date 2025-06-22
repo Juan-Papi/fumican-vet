@@ -140,9 +140,16 @@ class SalesNoteController extends Controller
 
         try {
             $this->salesNoteService->updateSalesNoteWithInventory($id, $data);
-            return redirect()->route('sales-note.index')->with('success', 'Venta actualizada');
+
+            // Responde SIEMPRE JSON (para Axios/Toast)
+            return response()->json([
+                'message' => 'Nota de venta actualizada exitosamente',
+            ], 200);
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Error al actualizar la nota de venta: ' . $e->getMessage()]);
+            return response()->json([
+                'message' => 'Error al actualizar la nota de venta',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 

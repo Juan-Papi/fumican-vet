@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed } from "vue";
+import axios from "axios";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { router } from "@inertiajs/vue3";
+import { FwbToast } from "flowbite-vue";
 
-// Props del back
+// Props del backend
 const props = defineProps({
     customers: Array,
     warehouses: Array,
@@ -12,22 +14,30 @@ const props = defineProps({
     salesNoteDetails: Array,
 });
 
+// Formulario reactivo
 const form = ref({
     customer_id: props.salesNote.customer_id,
     warehouse_id: props.salesNote.warehouse_id,
     medicaments: props.salesNoteDetails.map((detail) => ({
         detail_id: detail.id,
         id: detail.medicament_id,
-        quantity: detail.quantity,
-        sale_price: detail.sale_price,
-        subtotal: detail.subtotal,
+        quantity: Number(detail.quantity),
+        sale_price: Number(detail.sale_price),
+        subtotal: Number(detail.subtotal),
     })),
-    total_amount: props.salesNote.total_amount,
+    total_amount: Number(props.salesNote.total_amount),
     processing: false,
 });
 
+// Toasts
+const showToast = ref(false);
+const toastMsg = ref("");
+const toastType = ref("success");
+
+// Computed title
 const actionTitle = computed(() => "Editar");
 
+// Funciones para manipular medicamentos y totales
 function addMedicament() {
     form.value.medicaments.push({
         id: "",
@@ -35,42 +45,57 @@ function addMedicament() {
         sale_price: 0,
         subtotal: 0,
     });
+    updateTotalAmount();
 }
-
 function removeMedicament(index) {
     form.value.medicaments.splice(index, 1);
     updateTotalAmount();
 }
-
 function updateTotalAmount() {
     let total = 0;
     form.value.medicaments.forEach((m) => {
-        m.subtotal = m.quantity * m.sale_price;
+        m.subtotal = Number(m.quantity) * Number(m.sale_price);
         total += m.subtotal;
     });
     form.value.total_amount = total;
 }
 
-function submit() {
+// Submit con Axios para recibir respuesta JSON del backend
+async function submit() {
     form.value.processing = true;
-    router.put(route("sales-note.update", props.salesNote.id), form.value, {
-        onSuccess: () => {
-            alert("Nota de venta actualizada exitosamente");
-            form.value.processing = false;
-        },
-        onError: () => {
-            form.value.processing = false;
-        },
-    });
+    try {
+        const { data } = await axios.put(
+            route("sales-note.update", props.salesNote.id),
+            form.value
+        );
+        toastType.value = "success";
+        toastMsg.value =
+            data.message || "Nota de venta actualizada exitosamente";
+        showToast.value = true;
+        setTimeout(() => router.get(route("sales-note.index")), 1000);
+    } catch (e) {
+        toastType.value = "danger";
+        toastMsg.value =
+            e.response?.data?.message || "Error al actualizar la nota de venta";
+        showToast.value = true;
+    } finally {
+        form.value.processing = false;
+    }
 }
 
 function cancel() {
-    router.visit(route("sales-note.index"));
+    router.get(route("sales-note.index"));
 }
 </script>
 
 <template>
     <AdminLayout :title="actionTitle + ' Nota de Venta'">
+        <!-- Toast notificación -->
+        <div class="fixed top-4 right-4 z-50">
+            <FwbToast v-if="showToast" :type="toastType">{{
+                toastMsg
+            }}</FwbToast>
+        </div>
         <div class="container mx-auto p-6">
             <h2 class="text-2xl font-semibold mb-4">
                 {{ actionTitle }} Nota de Venta
@@ -84,6 +109,7 @@ function cancel() {
                     <select
                         v-model="form.customer_id"
                         class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                        required
                     >
                         <option value="">Seleccionar</option>
                         <option
@@ -95,7 +121,6 @@ function cancel() {
                         </option>
                     </select>
                 </div>
-
                 <!-- Almacén -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-600"
@@ -104,6 +129,7 @@ function cancel() {
                     <select
                         v-model="form.warehouse_id"
                         class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                        required
                     >
                         <option value="">Seleccionar</option>
                         <option
@@ -115,7 +141,6 @@ function cancel() {
                         </option>
                     </select>
                 </div>
-
                 <!-- Medicamentos -->
                 <div class="my-6">
                     <h3 class="text-xl font-semibold mb-4">Medicamentos</h3>
@@ -124,11 +149,11 @@ function cancel() {
                         :key="idx"
                         class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"
                     >
-                        <!-- Selector -->
                         <select
                             v-model="med.id"
                             @change="updateTotalAmount"
                             class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            required
                         >
                             <option value="">Seleccionar</option>
                             <option
@@ -139,17 +164,14 @@ function cancel() {
                                 {{ m.name }}
                             </option>
                         </select>
-
-                        <!-- Cantidad -->
                         <input
                             v-model.number="med.quantity"
                             type="number"
                             min="1"
                             @input="updateTotalAmount"
                             class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            required
                         />
-
-                        <!-- Precio de Venta -->
                         <input
                             v-model.number="med.sale_price"
                             type="number"
@@ -157,9 +179,8 @@ function cancel() {
                             step="0.01"
                             @input="updateTotalAmount"
                             class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                            required
                         />
-
-                        <!-- Subtotal + Eliminar -->
                         <div class="flex items-center justify-between mt-4">
                             <span class="font-medium"
                                 >{{ med.subtotal.toFixed(2) }} Bs</span
@@ -173,7 +194,6 @@ function cancel() {
                             </button>
                         </div>
                     </div>
-
                     <button
                         type="button"
                         @click="addMedicament"
@@ -182,7 +202,6 @@ function cancel() {
                         + Agregar Medicamento
                     </button>
                 </div>
-
                 <!-- Total General -->
                 <div class="my-6">
                     <label class="block text-sm font-medium text-gray-600"
@@ -191,16 +210,16 @@ function cancel() {
                     <input
                         :value="form.total_amount.toFixed(2)"
                         readonly
-                        class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+                        class="mt-1 block w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500 bg-gray-100 text-right"
                     />
                 </div>
-
                 <!-- Botones -->
                 <div class="flex justify-end space-x-4">
                     <button
                         type="button"
                         @click="cancel"
                         class="bg-gray-300 text-black px-6 py-2 rounded-md hover:bg-gray-700 hover:text-white"
+                        :disabled="form.processing"
                     >
                         Cancelar
                     </button>
