@@ -79,8 +79,22 @@ class SalesNoteController extends Controller
         $data['user_id'] = Auth::id();
         try {
             $salesNoteService->createSalesNoteWithInventory($data);
+            // Respondemos JSON para axios
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Nota de venta creada exitosamente',
+                    'success' => true,
+                ], 201);
+            }
+            // Redirección si es submit normal
             return redirect()->route('sales-note.index')->with('success', 'Nota de venta creada exitosamente');
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Error al crear la nota de venta: ' . $e->getMessage(),
+                    'success' => false,
+                ], 500);
+            }
             return redirect()->back()->withErrors(['error' => 'Error al crear la nota de venta: ' . $e->getMessage()]);
         }
     }
