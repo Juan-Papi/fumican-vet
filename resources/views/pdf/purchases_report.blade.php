@@ -54,10 +54,10 @@
     <h2>Reporte de Notas de Compra</h2>
 
     @if (!empty($filters['supplier_id']))
-        <p><strong>Proveedor:</strong> {{ \App\Models\Supplier::find($filters['supplier_id'])->name }}</p>
+        <p><strong>Proveedor:</strong> {{ \App\Models\Sales\Supplier::find($filters['supplier_id'])->name }}</p>
     @endif
     @if (!empty($filters['warehouse_id']))
-        <p><strong>Almacén:</strong> {{ \App\Models\Warehouse::find($filters['warehouse_id'])->name }}</p>
+        <p><strong>Almacén:</strong> {{ \App\Models\Sales\Warehouse::find($filters['warehouse_id'])->name }}</p>
     @endif
     @if (!empty($filters['date_from']) || !empty($filters['date_to']))
         <p>

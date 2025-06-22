@@ -102,13 +102,6 @@ function resetFilters() {
     );
 }
 
-// PDF
-function generatePdf() {
-    const params = { ...filters.value };
-    const url = route("purchase.report", params);
-    window.open(url, "_blank");
-}
-
 // --- View Modal (detalle de compra) ---
 const isShowModal = ref(false);
 const selectedPurchase = ref(null);
@@ -156,7 +149,20 @@ function printPurchase(p) {
                 >
                     <i class="fa-solid fa-plus mr-2"></i> Nueva Nota
                 </FwbButton>
-                <FwbButton color="green" @click="generatePdf">
+                <FwbButton
+                    tag="a"
+                    :href="
+                        route('purchase.report', {
+                            supplier_id: filters.supplier_id,
+                            warehouse_id: filters.warehouse_id,
+                            date_from: filters.date_from,
+                            date_to: filters.date_to,
+                        })
+                    "
+                    target="_blank"
+                    color="green"
+                    class="ml-4"
+                >
                     <i class="fa-solid fa-file-pdf mr-2"></i> Generar PDF
                 </FwbButton>
             </div>

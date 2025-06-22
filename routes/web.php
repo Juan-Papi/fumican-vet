@@ -111,15 +111,14 @@ Route::middleware([
             Route::get('/', [PurchaseNoteController::class, 'index'])->name('purchase.index');
             Route::get('create', [PurchaseNoteController::class, 'create'])->name('purchase.create');
             Route::post('/', [PurchaseNoteController::class, 'store'])->name('purchase.store');
+            Route::get('report', [PurchaseNoteController::class, 'report'])->name('purchase.report'); // <-- PON ESTA ANTES
+            Route::get('purchases/{id}/pdf', [PurchaseNoteController::class, 'generatePdf'])->name('purchase.pdf');
             Route::get('{id}/edit', [PurchaseNoteController::class, 'edit'])->name('purchase.edit');
             Route::put('{id}', [PurchaseNoteController::class, 'update'])->name('purchase.update');
             Route::get('{id}', [PurchaseNoteController::class, 'show'])->name('purchase.show');
-            Route::get('purchases/{id}/pdf', [PurchaseNoteController::class, 'generatePdf'])->name('purchase.pdf');
             Route::delete('{id}', [PurchaseNoteController::class, 'destroy'])->name('purchase.destroy');
-            Route::get('report', [PurchaseNoteController::class, 'report'])->name('purchase.report');
             Route::get('/purchase/search', [PurchaseNoteController::class, 'search'])->name('purchase.search');
         });
-
         Route::group(['prefix' => 'sales-note'], function () {
             Route::get('/', [SalesNoteController::class, 'index'])->name('sales-note.index');
             Route::get('create', [SalesNoteController::class, 'create'])->name('sales-note.create');
