@@ -1,93 +1,140 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import { ref, watch } from "vue";
 import axios from "axios";
+import { router } from "@inertiajs/vue3";
 import {
-    FwbButton,
-    FwbModal,
-    FwbPagination,
     FwbTable,
-    FwbTableBody,
-    FwbTableCell,
     FwbTableHead,
     FwbTableHeadCell,
+    FwbTableBody,
     FwbTableRow,
+    FwbTableCell,
+    FwbButton,
+    FwbPagination,
+    FwbModal,
     FwbToast,
 } from "flowbite-vue";
-import { ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
 
-// Props
-const props = defineProps({ purchases: Object });
+// Props desde el backend
+const props = defineProps({
+    purchases: Object,
+    suppliers: Array,
+    warehouses: Array,
+    filters: Object,
+});
 
-// Pagination state
-const currentPage = ref(props.purchases.current_page || 1);
-watch(currentPage, (newPage) => {
+// Estado reactivo para paginación y filtros
+const currentPage = ref(props.purchases.current_page);
+const filters = ref({
+    supplier_id: props.filters?.supplier_id || "",
+    warehouse_id: props.filters?.warehouse_id || "",
+    date_from: props.filters?.date_from || "",
+    date_to: props.filters?.date_to || "",
+    per_page: props.filters?.per_page || 15,
+});
+
+// Watch para paginación
+watch(currentPage, (page) => {
     router.get(
-        route("purchase.index"),
-        { page: newPage },
-        { preserveState: true }
+        route("purchase.search"),
+        { ...filters.value, page },
+        {
+            preserveState: true,
+            replace: true,
+        }
     );
 });
 
-// Toast state
+// Toast
 const showToast = ref(false);
 const toastMsg = ref("");
 const toastType = ref("success");
 
-// Delete modal state
+// Delete Modal
 const isDeleteModal = ref(false);
 const deleteTarget = ref(null);
 
-function confirmDelete(purchase) {
-    deleteTarget.value = purchase;
+function openDeleteModal(p) {
+    deleteTarget.value = p;
     isDeleteModal.value = true;
 }
 
-async function deletePurchase() {
-    if (!deleteTarget.value) return;
+async function submitDelete() {
     try {
-        const { data } = await axios.delete(
-            route("purchase.destroy", deleteTarget.value.id)
-        );
+        await axios.delete(route("purchase.destroy", deleteTarget.value.id));
         toastType.value = "success";
-        toastMsg.value = data.message;
-        showToast.value = true;
+        toastMsg.value = "Nota de compra eliminada correctamente";
         isDeleteModal.value = false;
         router.reload();
     } catch (e) {
         toastType.value = "danger";
-        toastMsg.value = e.response?.data?.message || "Error eliminando nota";
+        toastMsg.value = "Error al eliminar";
+    } finally {
         showToast.value = true;
-        isDeleteModal.value = false;
+        setTimeout(() => (showToast.value = false), 2500);
     }
 }
 
-// View modal state
+// Filtros
+function applyFilters() {
+    router.get(route("purchase.search"), filters.value, {
+        preserveState: true,
+        replace: true,
+    });
+}
+
+function resetFilters() {
+    Object.assign(filters.value, {
+        supplier_id: "",
+        warehouse_id: "",
+        date_from: "",
+        date_to: "",
+        per_page: 15,
+    });
+    router.get(
+        route("purchase.index"),
+        {},
+        {
+            preserveState: true,
+            replace: true,
+        }
+    );
+}
+
+// PDF
+function generatePdf() {
+    const params = { ...filters.value };
+    const url = route("purchase.report", params);
+    window.open(url, "_blank");
+}
+
+// --- View Modal (detalle de compra) ---
 const isShowModal = ref(false);
 const selectedPurchase = ref(null);
 const selectedDetails = ref([]);
 
-function showModal(show = true) {
-    isShowModal.value = show;
-}
-
-async function viewPurchase(purchase) {
+async function viewPurchase(p) {
     try {
-        const { data } = await axios.get(route("purchase.show", purchase.id), {
+        const { data } = await axios.get(route("purchase.show", p.id), {
             headers: { Accept: "application/json" },
         });
         selectedPurchase.value = data.purchaseNote;
         selectedDetails.value = data.purchaseNoteDetails;
-        showModal();
-    } catch (e) {
+        isShowModal.value = true;
+    } catch {
         toastType.value = "danger";
         toastMsg.value = "Error cargando detalle";
         showToast.value = true;
+        setTimeout(() => (showToast.value = false), 2500);
     }
 }
 
-function printPurchase(id) {
-    window.open(route("purchase.pdf", id), "_blank");
+// --- Imprimir PDF individual (por compra) ---
+// IMPORTANTE: Tu ruta definida es 'purchase.pdf', pero el endpoint es 'purchases/purchases/{id}/pdf'
+function printPurchase(p) {
+    // Así funciona con la definición de tu ruta:
+    window.open(route("purchase.pdf", { id: p.id }), "_blank");
 }
 </script>
 
@@ -95,83 +142,148 @@ function printPurchase(id) {
     <AdminLayout title="Notas de Compra">
         <!-- Toast -->
         <div class="fixed top-4 right-4 z-50">
-            <FwbToast v-if="showToast" :type="toastType">
-                {{ toastMsg }}
-            </FwbToast>
+            <FwbToast v-if="showToast" :type="toastType">{{
+                toastMsg
+            }}</FwbToast>
         </div>
 
-        <!-- Header -->
-        <div class="flex justify-between my-6">
+        <div class="flex justify-between items-center my-6">
             <h2 class="text-2xl font-semibold">Notas de Compra</h2>
-            <FwbButton
-                color="purple"
-                @click="router.get(route('purchase.create'))"
-            >
-                <i class="fa-solid fa-plus mr-2"></i> Agregar Compras
-            </FwbButton>
+            <div class="space-x-2">
+                <FwbButton
+                    color="purple"
+                    @click="router.get(route('purchase.create'))"
+                >
+                    <i class="fa-solid fa-plus mr-2"></i> Nueva Nota
+                </FwbButton>
+                <FwbButton color="green" @click="generatePdf">
+                    <i class="fa-solid fa-file-pdf mr-2"></i> Generar PDF
+                </FwbButton>
+            </div>
         </div>
 
-        <!-- Table -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-            <FwbTable>
-                <FwbTableHead>
-                    <FwbTableHeadCell>ID</FwbTableHeadCell>
-                    <FwbTableHeadCell>Fecha</FwbTableHeadCell>
-                    <FwbTableHeadCell>Total (Bs)</FwbTableHeadCell>
-                    <FwbTableHeadCell>Modificado</FwbTableHeadCell>
-                    <FwbTableHeadCell
-                        ><span class="sr-only">Acciones</span></FwbTableHeadCell
-                    >
-                </FwbTableHead>
-                <FwbTableBody>
-                    <FwbTableRow v-for="p in purchases.data" :key="p.id">
-                        <FwbTableCell>{{ p.id }}</FwbTableCell>
-                        <FwbTableCell>{{ p.purchase_date }}</FwbTableCell>
-                        <FwbTableCell>{{
-                            parseFloat(p.total_amount).toFixed(2)
-                        }}</FwbTableCell>
-                        <FwbTableCell>{{
-                            new Date(p.updated_at).toLocaleString()
-                        }}</FwbTableCell>
-                        <FwbTableCell class="flex gap-2 justify-end">
-                            <FwbButton
-                                color="green"
-                                square
-                                @click="viewPurchase(p)"
-                            >
-                                <i class="fa-solid fa-eye"></i>
-                            </FwbButton>
-                            <FwbButton
-                                color="yellow"
-                                square
-                                @click="
-                                    router.get(route('purchase.edit', p.id))
-                                "
-                            >
-                                <i class="fa-solid fa-pencil"></i>
-                            </FwbButton>
-                            <FwbButton
-                                color="blue"
-                                square
-                                @click="printPurchase(p.id)"
-                            >
-                                <i class="fa-solid fa-print"></i>
-                            </FwbButton>
-                            <FwbButton
-                                color="red"
-                                square
-                                @click="confirmDelete(p)"
-                            >
-                                <i class="fa-solid fa-trash"></i>
-                            </FwbButton>
-                        </FwbTableCell>
-                    </FwbTableRow>
-                </FwbTableBody>
-            </FwbTable>
+        <!-- Barra de Filtros -->
+        <form
+            @submit.prevent="applyFilters"
+            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 bg-white p-4 rounded shadow"
+        >
+            <div>
+                <label class="block text-sm">Proveedor</label>
+                <select
+                    v-model="filters.supplier_id"
+                    class="w-full p-2 border rounded"
+                >
+                    <option value="">Todos</option>
+                    <option v-for="s in suppliers" :key="s.id" :value="s.id">
+                        {{ s.name }}
+                    </option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm">Almacén</label>
+                <select
+                    v-model="filters.warehouse_id"
+                    class="w-full p-2 border rounded"
+                >
+                    <option value="">Todos</option>
+                    <option v-for="w in warehouses" :key="w.id" :value="w.id">
+                        {{ w.name }}
+                    </option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm">Desde</label>
+                <input
+                    type="date"
+                    v-model="filters.date_from"
+                    class="w-full p-2 border rounded"
+                />
+            </div>
+            <div>
+                <label class="block text-sm">Hasta</label>
+                <input
+                    type="date"
+                    v-model="filters.date_to"
+                    class="w-full p-2 border rounded"
+                />
+            </div>
+            <div class="flex items-end space-x-2">
+                <FwbButton color="purple" type="submit">Filtrar</FwbButton>
+                <FwbButton color="alternative" @click.prevent="resetFilters"
+                    >Limpiar</FwbButton
+                >
+            </div>
+        </form>
+
+        <!-- Tabla -->
+        <FwbTable>
+            <FwbTableHead>
+                <FwbTableHeadCell>ID</FwbTableHeadCell>
+                <FwbTableHeadCell>Fecha</FwbTableHeadCell>
+                <FwbTableHeadCell>Total (Bs)</FwbTableHeadCell>
+                <FwbTableHeadCell>Proveedor</FwbTableHeadCell>
+                <FwbTableHeadCell>Almacén</FwbTableHeadCell>
+                <FwbTableHeadCell
+                    ><span class="sr-only">Acciones</span></FwbTableHeadCell
+                >
+            </FwbTableHead>
+            <FwbTableBody>
+                <FwbTableRow v-for="p in purchases.data" :key="p.id">
+                    <FwbTableCell>{{ p.id }}</FwbTableCell>
+                    <FwbTableCell>{{ p.purchase_date }}</FwbTableCell>
+                    <FwbTableCell>{{
+                        parseFloat(p.total_amount).toFixed(2)
+                    }}</FwbTableCell>
+                    <FwbTableCell>{{ p.supplier.name }}</FwbTableCell>
+                    <FwbTableCell>{{ p.warehouse.name }}</FwbTableCell>
+                    <FwbTableCell class="flex gap-2 justify-end">
+                        <FwbButton
+                            color="green"
+                            square
+                            @click="viewPurchase(p)"
+                        >
+                            <i class="fa-solid fa-eye"></i>
+                        </FwbButton>
+                        <FwbButton
+                            color="blue"
+                            square
+                            @click="printPurchase(p)"
+                        >
+                            <i class="fa-solid fa-print"></i>
+                        </FwbButton>
+                        <FwbButton
+                            color="yellow"
+                            square
+                            @click="router.get(route('purchase.edit', p.id))"
+                        >
+                            <i class="fa-solid fa-pencil"></i>
+                        </FwbButton>
+                        <FwbButton
+                            color="red"
+                            square
+                            @click="openDeleteModal(p)"
+                        >
+                            <i class="fa-solid fa-trash"></i>
+                        </FwbButton>
+                    </FwbTableCell>
+                </FwbTableRow>
+            </FwbTableBody>
+        </FwbTable>
+
+        <!-- Mensaje si no hay datos -->
+        <div
+            v-if="!purchases.data || purchases.data.length === 0"
+            class="text-center py-8 text-gray-500"
+        >
+            <i class="fa-solid fa-inbox text-4xl mb-4"></i>
+            <p>No se encontraron notas de compra con los filtros aplicados</p>
         </div>
 
-        <!-- Pagination -->
-        <div class="flex justify-center my-4">
+        <!-- Paginación -->
+        <div
+            class="flex justify-center my-4"
+            v-if="purchases.data && purchases.data.length > 0"
+        >
             <FwbPagination
                 v-model="currentPage"
                 :total-items="purchases.total"
@@ -190,81 +302,78 @@ function printPurchase(id) {
                 <FwbButton color="alternative" @click="isDeleteModal = false"
                     >Cancelar</FwbButton
                 >
-                <FwbButton color="red" @click="deletePurchase"
+                <FwbButton color="red" @click="submitDelete"
                     >Eliminar</FwbButton
                 >
             </template>
         </FwbModal>
 
         <!-- View Modal -->
-        <FwbModal v-if="isShowModal" @close="showModal(false)">
+        <FwbModal v-if="isShowModal" @close="isShowModal = false">
             <template #header>
-                Detalle de Compra #{{ selectedPurchase.id }}
+                Detalle de Compra #{{ selectedPurchase?.id }}
             </template>
             <template #body>
-                <p>
-                    <strong>Fecha:</strong>
-                    {{ selectedPurchase.purchase_date }} &nbsp;&nbsp;
-                    <strong>Proveedor:</strong>
-                    {{ selectedPurchase.supplier.name }}
-                </p>
-                <div class="overflow-x-auto mt-4">
-                    <FwbTable class="min-w-full">
-                        <FwbTableHead>
-                            <FwbTableHeadCell>Médicamento</FwbTableHeadCell>
-                            <FwbTableHeadCell class="text-right"
-                                >Cant.</FwbTableHeadCell
-                            >
-                            <FwbTableHeadCell class="text-right"
-                                >Precio</FwbTableHeadCell
-                            >
-                            <FwbTableHeadCell class="text-right"
-                                >Subtotal</FwbTableHeadCell
-                            >
-                        </FwbTableHead>
-                        <FwbTableBody>
-                            <FwbTableRow
-                                v-for="d in selectedDetails"
-                                :key="d.id"
-                            >
-                                <FwbTableCell>{{
-                                    d.medicament.name
-                                }}</FwbTableCell>
-                                <FwbTableCell class="text-right">{{
-                                    d.quantity
-                                }}</FwbTableCell>
-                                <FwbTableCell class="text-right"
-                                    >{{ d.purchase_price }} Bs</FwbTableCell
+                <div v-if="selectedPurchase">
+                    <p>
+                        <strong>Fecha:</strong>
+                        {{ selectedPurchase.purchase_date }} &nbsp;&nbsp;
+                        <strong>Proveedor:</strong>
+                        {{ selectedPurchase.supplier.name }}
+                    </p>
+                    <div class="overflow-x-auto mt-4">
+                        <FwbTable class="min-w-full">
+                            <FwbTableHead>
+                                <FwbTableHeadCell>Médicamento</FwbTableHeadCell>
+                                <FwbTableHeadCell class="text-right"
+                                    >Cant.</FwbTableHeadCell
                                 >
-                                <FwbTableCell class="text-right"
-                                    >{{ d.subtotal }} Bs</FwbTableCell
+                                <FwbTableHeadCell class="text-right"
+                                    >Precio</FwbTableHeadCell
                                 >
-                            </FwbTableRow>
-                        </FwbTableBody>
-                    </FwbTable>
-                </div>
-                <div class="mt-4 text-right">
-                    <span class="font-semibold text-lg">
-                        Total:
-                        {{
-                            parseFloat(selectedPurchase.total_amount).toFixed(2)
-                        }}
-                        Bs
-                    </span>
+                                <FwbTableHeadCell class="text-right"
+                                    >Subtotal</FwbTableHeadCell
+                                >
+                            </FwbTableHead>
+                            <FwbTableBody>
+                                <FwbTableRow
+                                    v-for="d in selectedDetails"
+                                    :key="d.id"
+                                >
+                                    <FwbTableCell>{{
+                                        d.medicament.name
+                                    }}</FwbTableCell>
+                                    <FwbTableCell class="text-right">{{
+                                        d.quantity
+                                    }}</FwbTableCell>
+                                    <FwbTableCell class="text-right"
+                                        >{{ d.purchase_price }} Bs</FwbTableCell
+                                    >
+                                    <FwbTableCell class="text-right"
+                                        >{{ d.subtotal }} Bs</FwbTableCell
+                                    >
+                                </FwbTableRow>
+                            </FwbTableBody>
+                        </FwbTable>
+                    </div>
+                    <div class="mt-4 text-right">
+                        <span class="font-semibold text-lg">
+                            Total:
+                            {{
+                                parseFloat(
+                                    selectedPurchase.total_amount
+                                ).toFixed(2)
+                            }}
+                            Bs
+                        </span>
+                    </div>
                 </div>
             </template>
             <template #footer>
-                <FwbButton color="alternative" @click="showModal(false)"
+                <FwbButton color="alternative" @click="isShowModal = false"
                     >Cerrar</FwbButton
                 >
             </template>
         </FwbModal>
     </AdminLayout>
 </template>
-
-<style scoped>
-.container {
-    max-width: 900px;
-    margin: 0 auto;
-}
-</style>

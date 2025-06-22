@@ -19,13 +19,42 @@ use PDF;
 
 class PurchaseNoteController extends Controller
 {
-    public function __construct(protected PurchaseNoteService $purchaseNoteService, protected PurchaseNoteDetailService $purchaseNoteDetailService, protected InventoryService $inventoryService) {}
+    public function __construct(protected PurchaseNoteService $purchaseNoteService, protected PurchaseNoteDetailService $purchaseNoteDetailService, protected InventoryService $inventoryService, protected SupplierService $supplierService, protected WarehouseService $warehouseService) {}
 
-    public function index()
+    public function index(Request $request)
     {
+        // Sin filtros: solo muestra todo paginado
         $purchases = $this->purchaseNoteService->getAllPurchaseNotes();
+        $suppliers = $this->supplierService->getAllSuppliers()->items();
+        $warehouses = $this->warehouseService->getAllWarehouses()->items();
+
         return Inertia::render('Sales/PurchasesNotes/Index', [
-            'purchases' => $purchases,
+            'purchases'  => $purchases,
+            'suppliers'  => $suppliers,
+            'warehouses' => $warehouses,
+            'filters'    => null,
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $filters = $request->only([
+            'supplier_id',
+            'warehouse_id',
+            'date_from',
+            'date_to',
+            'per_page',
+        ]);
+        $purchases = $this->purchaseNoteService->getFilteredPurchaseNotes($filters);
+
+        $suppliers = $this->supplierService->getAllSuppliers()->items();
+        $warehouses = $this->warehouseService->getAllWarehouses()->items();
+
+        return Inertia::render('Sales/PurchasesNotes/Index', [
+            'purchases'  => $purchases,
+            'suppliers'  => $suppliers,
+            'warehouses' => $warehouses,
+            'filters'    => $filters,
         ]);
     }
 
@@ -296,5 +325,23 @@ class PurchaseNoteController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function report(Request $request)
+    {
+        $filters = $request->only([
+            'supplier_id',
+            'warehouse_id',
+            'date_from',
+            'date_to',
+        ]);
+
+        // Trae todos los registros filtrados (sin paginar)
+        $purchases = $this->purchaseNoteService->getFilteredPurchaseNotes($filters, $paginate = false);
+
+        $pdf = PDF::loadView('pdf.purchases_report', compact('purchases', 'filters'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('reporte_notas_compra_' . now()->format('Ymd') . '.pdf');
     }
 }
