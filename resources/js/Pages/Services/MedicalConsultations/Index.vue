@@ -48,6 +48,7 @@ const toastType = ref("success");
 const isCreateOrEditModal = ref(false);
 const isDeleteModal = ref(false);
 const isSearchPetModal = ref(false);
+const isViewModal = ref(false); // <-- AÑADIDO: Estado para el modal de vista
 const modalMode = ref("create"); // 'create' or 'edit'
 
 const selectedConsultation = ref(null);
@@ -158,6 +159,12 @@ function openEditModal(consultation) {
     isCreateOrEditModal.value = true;
 }
 
+// <-- AÑADIDO: Función para abrir el modal de vista -->
+function openViewModal(consultation) {
+    selectedConsultation.value = consultation;
+    isViewModal.value = true;
+}
+
 function openDeleteModal(consultation) {
     selectedConsultation.value = consultation;
     isDeleteModal.value = true;
@@ -167,6 +174,7 @@ function closeAllModals() {
     isCreateOrEditModal.value = false;
     isDeleteModal.value = false;
     isSearchPetModal.value = false;
+    isViewModal.value = false; // <-- AÑADIDO: Cerrar modal de vista
     selectedConsultation.value = null;
     selectedPet.value = null;
 }
@@ -342,6 +350,12 @@ async function submitDelete() {
                         consultation.reason
                     }}</FwbTableCell>
                     <FwbTableCell class="space-x-2 whitespace-nowrap">
+                        <!-- AÑADIDO: Enlace para ver -->
+                        <FwbA
+                            href="#"
+                            @click.prevent="openViewModal(consultation)"
+                            >Ver</FwbA
+                        >
                         <FwbA
                             href="#"
                             @click.prevent="openEditModal(consultation)"
@@ -760,6 +774,227 @@ async function submitDelete() {
                         :loading="loading"
                         class="ml-2"
                         >Guardar</FwbButton
+                    >
+                </div>
+            </template>
+        </FwbModal>
+
+        <!-- AÑADIDO: Modal de vista -->
+        <FwbModal
+            size="4xl"
+            v-if="isViewModal && selectedConsultation"
+            @close="closeAllModals"
+        >
+            <template #header>
+                <h3 class="text-xl font-semibold">
+                    Detalles de la Consulta Médica
+                </h3>
+            </template>
+            <template #body>
+                <div class="space-y-6">
+                    <!-- Pet Details -->
+                    <section>
+                        <FormSectionTitle title="Datos de la Mascota" />
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm mt-2 p-4 bg-gray-50 rounded-lg"
+                        >
+                            <p>
+                                <strong class="font-semibold"
+                                    >Propietario:</strong
+                                >
+                                {{ selectedConsultation.pet_owner }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold">Mascota:</strong>
+                                {{ selectedConsultation.pet_name }}
+                            </p>
+                            <p v-if="selectedConsultation.pet?.owner?.ci">
+                                <strong class="font-semibold">Cédula:</strong>
+                                {{ selectedConsultation.pet.owner.ci }}
+                            </p>
+                            <p v-if="selectedConsultation.pet?.breed">
+                                <strong class="font-semibold">Raza:</strong>
+                                {{ selectedConsultation.pet.breed.name }}
+                            </p>
+                        </div>
+                    </section>
+                    <!-- Anamnesis Details -->
+                    <section>
+                        <FormSectionTitle title="Anamnesis" />
+                        <div class="space-y-2 text-sm mt-2">
+                            <p>
+                                <strong class="font-semibold">Motivo:</strong>
+                                {{ selectedConsultation.reason || "N/A" }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Fecha Desparasitación:</strong
+                                >
+                                {{ selectedConsultation.dewormed_at || "N/A" }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Enfermedades Previas:</strong
+                                >
+                                {{
+                                    selectedConsultation.previous_illnesses ||
+                                    "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Intervenciones Previas:</strong
+                                >
+                                {{
+                                    selectedConsultation.previous_interventions ||
+                                    "N/A"
+                                }}
+                            </p>
+                        </div>
+                    </section>
+                    <!-- Physical Exam Details -->
+                    <section>
+                        <FormSectionTitle title="Examen Físico" />
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-2 text-sm mt-2"
+                        >
+                            <p>
+                                <strong class="font-semibold"
+                                    >Estado General:</strong
+                                >
+                                {{
+                                    selectedConsultation.general_condition ||
+                                    "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold">Apetito:</strong>
+                                {{ selectedConsultation.appetite || "N/A" }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Hidratación:</strong
+                                >
+                                {{ selectedConsultation.hydratation || "N/A" }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold">Mucosa:</strong>
+                                {{ selectedConsultation.mucosa || "N/A" }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold">Peso:</strong>
+                                {{
+                                    selectedConsultation.weight
+                                        ? `${selectedConsultation.weight} Kg`
+                                        : "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Temperatura:</strong
+                                >
+                                {{
+                                    selectedConsultation.temperature
+                                        ? `${selectedConsultation.temperature} °C`
+                                        : "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Frec. Cardíaca:</strong
+                                >
+                                {{ selectedConsultation.heart_rate || "N/A" }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Frec. Respiratoria:</strong
+                                >
+                                {{
+                                    selectedConsultation.respiratory_rate ||
+                                    "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Ap. Digestivo:</strong
+                                >
+                                {{
+                                    selectedConsultation.digestive_system ||
+                                    "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Ap. Genitourinario:</strong
+                                >
+                                {{
+                                    selectedConsultation.genitourinary_system ||
+                                    "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Ap. Respiratorio:</strong
+                                >
+                                {{
+                                    selectedConsultation.respiratory_system ||
+                                    "N/A"
+                                }}
+                            </p>
+                        </div>
+                    </section>
+                    <!-- Diagnosis and Treatment Details -->
+                    <section>
+                        <FormSectionTitle title="Diagnóstico y Tratamiento" />
+                        <div class="space-y-2 text-sm mt-2">
+                            <p>
+                                <strong class="font-semibold"
+                                    >Diagnóstico Presuntivo:</strong
+                                >
+                                {{
+                                    selectedConsultation.presumptive_diagnosis ||
+                                    "N/A"
+                                }}
+                            </p>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Diagnóstico Confirmativo:</strong
+                                >
+                                {{
+                                    selectedConsultation.confirmatory_diagnosis ||
+                                    "N/A"
+                                }}
+                            </p>
+                            <div>
+                                <strong class="font-semibold block"
+                                    >Tratamiento y Evolución:</strong
+                                >
+                                <p
+                                    class="mt-1 whitespace-pre-wrap bg-gray-50 p-2 rounded"
+                                >
+                                    {{
+                                        selectedConsultation.treatment || "N/A"
+                                    }}
+                                </p>
+                            </div>
+                            <p>
+                                <strong class="font-semibold"
+                                    >Costo Consulta:</strong
+                                >
+                                {{
+                                    selectedConsultation.consultation_fee
+                                        ? `$${selectedConsultation.consultation_fee}`
+                                        : "N/A"
+                                }}
+                            </p>
+                        </div>
+                    </section>
+                </div>
+            </template>
+            <template #footer>
+                <div class="flex justify-end">
+                    <FwbButton @click="closeAllModals" color="alternative"
+                        >Cerrar</FwbButton
                     >
                 </div>
             </template>
