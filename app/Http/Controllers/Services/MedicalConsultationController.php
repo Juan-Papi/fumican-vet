@@ -6,79 +6,44 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Services\StoreMedicalConsultationRequest;
 use App\Http\Requests\Services\UpdateMedicalConsultationRequest;
 use App\Services\Services\MedicalConsultationService;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class MedicalConsultationController extends Controller
 {
     public function __construct(protected MedicalConsultationService $mcService) {}
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): InertiaResponse
     {
-        $medicalConsultations = $this->mcService->getAll();
+        $medicalConsultations = $this->mcService->getAllWithDetails();
         return Inertia::render('Services/MedicalConsultations/Index', [
-            'medicalConsultations' => $medicalConsultations
+            'medicalConsultations' => $medicalConsultations,
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(StoreMedicalConsultationRequest $request): JsonResponse
     {
-        return Inertia::render('Services/MedicalConsultations/Form', [
-            'formAction' => 'create'
+        $consultation = $this->mcService->create($request->validated());
+        return response()->json([
+            'message' => 'Consulta creada correctamente.',
+            'consultation' => $consultation,
+        ], 201);
+    }
+
+    public function update(UpdateMedicalConsultationRequest $request, string $id): JsonResponse
+    {
+        $this->mcService->update($request->validated(), $id);
+        return response()->json([
+            'message' => 'Consulta actualizada correctamente.'
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreMedicalConsultationRequest $request)
+    public function destroy(string $id): JsonResponse
     {
-        $this->mcService->create($request->validated());
-        return redirect()->route('medical-consultations.index');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $medCons = $this->mcService->getById($id);
-        $medCons->load('pet:id,name,customer_id,breed_id', 'pet.owner:id,first_name,last_name,ci', 'pet.breed.specie');
-        return Inertia::render('Services/MedicalConsultations/Form', [
-            'formAction' => 'edit',
-            'medicalConsultation' => $medCons
+        $this->mcService->delete($id);
+        return response()->json([
+            'message' => 'Consulta eliminada correctamente.'
         ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateMedicalConsultationRequest $request, string $id)
-    {
-        $data = $request->validated();
-        $this->mcService->update($data, $id);
-        return redirect()->route('medical-consultations.index');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

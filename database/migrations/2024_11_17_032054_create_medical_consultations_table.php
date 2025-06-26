@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('reason');
             $table->date('dewormed_at')->nullable();
-            $table->string('previous_ilnesses')->nullable();
+            $table->string('previous_illnesses')->nullable();
             $table->string('previous_interventions')->nullable();
             $table->string('general_condition', 120);
             $table->decimal('weight', 8, 2, true);

@@ -8,18 +8,18 @@ class MedicalConsultationRepository
 {
     public function __construct(protected MedicalConsultation $model) {}
 
-    public function getAll()
+    public function getAllWithDetails()
     {
+        // El método with() carga las relaciones para evitar problemas de N+1
+        // y asegura que los datos estén disponibles.
         return $this->model
-            ->select('id', 'pet_id', 'created_at', 'reason', 'updated_at')
-            ->with(['pet:id,name,customer_id', 'pet.owner:id,first_name,last_name'])
+            ->with([
+                'pet:id,name,customer_id,breed_id',
+                'pet.owner:id,first_name,last_name,ci',
+                'pet.breed.specie:id,name'
+            ])
             ->orderBy('updated_at', 'desc')
             ->paginate();
-    }
-
-    public function findById($id)
-    {
-        return $this->model->findOrFail($id);
     }
 
     public function create(array $data)
@@ -31,5 +31,10 @@ class MedicalConsultationRepository
     {
         $mc = $this->model->findOrFail($id);
         return $mc->update($data);
+    }
+
+    public function delete($id)
+    {
+        return $this->model->destroy($id);
     }
 }

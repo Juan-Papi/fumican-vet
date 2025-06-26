@@ -8,19 +8,14 @@ class MedicalConsultationService
 {
     public function __construct(protected MedicalConsultationRepository $repository) {}
 
-    public function getAll()
+    public function getAllWithDetails()
     {
-        $medicalConsultations = $this->repository->getAll();
+        $medicalConsultations = $this->repository->getAllWithDetails();
         foreach ($medicalConsultations as $mc) {
-            $mc->pet_name = $mc->pet->name;
-            $mc->pet_owner = $mc->pet->owner->first_name . ' ' . $mc->pet->owner->last_name;
+            $mc->pet_name = $mc->pet?->name ?? 'N/A';
+            $mc->pet_owner = $mc->pet?->owner ? ($mc->pet->owner->first_name . ' ' . $mc->pet->owner->last_name) : 'N/A';
         }
         return $medicalConsultations;
-    }
-
-    public function getById($id)
-    {
-        return $this->repository->findById($id);
     }
 
     public function create(array $data)
@@ -31,5 +26,10 @@ class MedicalConsultationService
     public function update(array $data, $id)
     {
         return $this->repository->update($data, $id);
+    }
+
+    public function delete($id)
+    {
+        return $this->repository->delete($id);
     }
 }

@@ -43,7 +43,13 @@ Route::middleware([
         Route::get('/customers-search', [CustomerController::class, 'search'])->name('customers.search');
         Route::resource('/customers', CustomerController::class);
 
-        Route::resource('/medical-consultations', MedicalConsultationController::class);
+        Route::group(['prefix' => 'medical-consultations', 'as' => 'medical-consultations.'], function () {
+            Route::get('/', [MedicalConsultationController::class, 'index'])->name('index');
+            Route::post('/', [MedicalConsultationController::class, 'store'])->name('store');
+            Route::put('{id}', [MedicalConsultationController::class, 'update'])->name('update');
+            Route::delete('{id}', [MedicalConsultationController::class, 'destroy'])->name('destroy');
+            // La ruta 'edit' y 'create' ya no son necesarias porque usamos modales en la página de índice.
+        });
 
         Route::get('/species-search', [SpecieController::class, 'search'])->name('species.search');
         Route::resource('/species', SpecieController::class);

@@ -22,7 +22,7 @@ class MedicalConsultation extends Model
     protected $fillable = [
         'reason',
         'dewormed_at',
-        'previous_ilnesses',
+        'previous_illnesses',
         'previous_interventions',
         'general_condition',
         'weight',
