@@ -32,4 +32,14 @@ class MedicalConsultationService
     {
         return $this->repository->delete($id);
     }
+
+    public function search(array $filters)
+    {
+        return $this->repository->search($filters, true); // Paginated
+    }
+
+    public function getFilteredResults(array $filters)
+    {
+        return $this->repository->search($filters, false); // Not paginated
+    }
 }

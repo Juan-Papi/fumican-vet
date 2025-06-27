@@ -59,7 +59,9 @@ class MedicalConsultation extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // CORREGIDO: Se especifica la clave foránea correcta 'veterinarian_id'.
+        // Esto le dice a Laravel que use esta columna para la relación en lugar de la predeterminada 'user_id'.
+        return $this->belongsTo(User::class, 'veterinarian_id');
     }
 
     /**

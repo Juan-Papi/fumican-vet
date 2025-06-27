@@ -1,6 +1,5 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import PermissionEnum from "@/Utils/Enums/PermissionEnum";
 import { usePage, router } from "@inertiajs/vue3";
 import {
     FwbA,
@@ -20,7 +19,7 @@ import {
 import { computed, ref, watch } from "vue";
 import axios from "axios";
 
-// --- Components for form & search ---
+// Components
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
@@ -29,14 +28,38 @@ import SearchModal from "@/Components/Modals/SearchModal.vue";
 import SearchUser from "@/Components/Icons/Svg/SearchUser.vue";
 import { useDebouncedRef } from "@/Utils/debouncedRef";
 
-// --- PROPS & PAGINATION ---
-const props = defineProps({ medicalConsultations: Object });
+// --- PROPS & PAGINATION & FILTERS ---
+const props = defineProps({
+    medicalConsultations: Object,
+    filters: Object,
+});
+
 const currentPage = ref(props.medicalConsultations.current_page || 1);
 watch(currentPage, (newPage) => {
-    router.get(route("medical-consultations.index", { page: newPage }), {
+    const params = { ...filters.value, page: newPage };
+    router.get(route("medical-consultations.search"), params, {
         preserveState: true,
+        replace: true,
     });
 });
+
+const filters = ref({
+    search_term: props.filters.search_term || "",
+    date_from: props.filters.date_from || "",
+    date_to: props.filters.date_to || "",
+});
+
+function applyFilters() {
+    router.get(route("medical-consultations.search"), filters.value, {
+        preserveState: true,
+        replace: true,
+    });
+}
+
+function resetFilters() {
+    filters.value = { search_term: "", date_from: "", date_to: "" };
+    router.get(route("medical-consultations.index"));
+}
 
 // --- STATE MANAGEMENT ---
 const loading = ref(false);
@@ -44,17 +67,17 @@ const showToast = ref(false);
 const toastMsg = ref("");
 const toastType = ref("success");
 
-// --- Modals ---
+// --- MODALS ---
 const isCreateOrEditModal = ref(false);
 const isDeleteModal = ref(false);
 const isSearchPetModal = ref(false);
-const isViewModal = ref(false); // <-- AÑADIDO: Estado para el modal de vista
-const modalMode = ref("create"); // 'create' or 'edit'
+const isViewModal = ref(false);
+const modalMode = ref("create");
 
 const selectedConsultation = ref(null);
 const selectedPet = ref(null);
 
-// --- Form ---
+// --- FORM ---
 const defaultFormState = {
     id: null,
     reason: "",
@@ -83,7 +106,7 @@ const defaultFormState = {
 const form = ref({ ...defaultFormState });
 const formErrors = ref({});
 
-// --- Pet Search ---
+// --- PET SEARCH ---
 const search = useDebouncedRef("", 300);
 const isFetchingData = ref(false);
 const petsList = ref([]);
@@ -93,12 +116,11 @@ const isEmptyData = computed(
     () => props.medicalConsultations.data.length === 0
 );
 const page = usePage();
-const canCreateMedCons = true; // Assuming permission
+const canCreateMedCons = true;
 const canEditMedCons = true;
 const canDeleteMedCons = true;
 
-// --- MODAL & FORM FUNCTIONS ---
-
+// --- FUNCTIONS ---
 function displayToast(type, message) {
     toastType.value = type;
     toastMsg.value = message;
@@ -129,7 +151,6 @@ function openEditModal(consultation) {
     selectedConsultation.value = consultation;
     formErrors.value = {};
 
-    // Populate form fields
     form.value = {
         ...defaultFormState,
         ...consultation,
@@ -142,7 +163,6 @@ function openEditModal(consultation) {
         mucosa: consultation.mucosa ? consultation.mucosa.split(", ") : [],
     };
 
-    // Populate selected pet details for display
     if (consultation.pet) {
         const pet = consultation.pet;
         selectedPet.value = {
@@ -159,7 +179,6 @@ function openEditModal(consultation) {
     isCreateOrEditModal.value = true;
 }
 
-// <-- AÑADIDO: Función para abrir el modal de vista -->
 function openViewModal(consultation) {
     selectedConsultation.value = consultation;
     isViewModal.value = true;
@@ -174,12 +193,11 @@ function closeAllModals() {
     isCreateOrEditModal.value = false;
     isDeleteModal.value = false;
     isSearchPetModal.value = false;
-    isViewModal.value = false; // <-- AÑADIDO: Cerrar modal de vista
+    isViewModal.value = false;
     selectedConsultation.value = null;
     selectedPet.value = null;
 }
 
-// --- Pet Search Functions ---
 watch(search, async (value) => {
     if (value.length < 1) {
         petsList.value = [];
@@ -207,12 +225,10 @@ function handleSelectPet(pet) {
         specie_and_breed: `${pet.breed?.specie?.name} - ${pet.breed?.name}`,
     };
     form.value.pet_id = pet.id;
-    formErrors.value.pet_id = null; // Clear any previous error
+    formErrors.value.pet_id = null;
     isSearchPetModal.value = false;
     search.value = "";
 }
-
-// --- CRUD FUNCTIONS ---
 
 async function submitForm() {
     if (modalMode.value === "create") {
@@ -307,19 +323,73 @@ async function submitDelete() {
             }}</FwbToast>
         </div>
 
-        <!-- Header -->
+        <!-- Header & Report Buttons -->
         <div class="flex justify-between my-6 items-center">
             <h2 class="text-2xl font-semibold">Consultas Médicas</h2>
-            <FwbButton
-                v-if="canCreateMedCons"
-                @click="openCreateModal"
-                color="purple"
-            >
-                Agregar Consulta
-            </FwbButton>
+            <div class="flex items-center space-x-2">
+                <FwbButton
+                    tag="a"
+                    :href="route('medical-consultations.report', filters)"
+                    target="_blank"
+                    color="green"
+                >
+                    <i class="fa-solid fa-file-pdf mr-2"></i> Reporte PDF
+                </FwbButton>
+                <FwbButton
+                    v-if="canCreateMedCons"
+                    @click="openCreateModal"
+                    color="purple"
+                >
+                    <i class="fa-solid fa-plus mr-2"></i> Agregar Consulta
+                </FwbButton>
+            </div>
         </div>
 
-        <!-- Table -->
+        <!-- Filters Bar -->
+        <form
+            @submit.prevent="applyFilters"
+            class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-100 rounded-lg"
+        >
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700"
+                    >Buscar por Mascota, Dueño o Motivo</label
+                >
+                <TextInput
+                    v-model="filters.search_term"
+                    type="text"
+                    class="mt-1 block w-full"
+                    placeholder="Ej: Max, Smith, vacuna..."
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700"
+                    >Desde</label
+                >
+                <TextInput
+                    v-model="filters.date_from"
+                    type="date"
+                    class="mt-1 block w-full"
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700"
+                    >Hasta</label
+                >
+                <TextInput
+                    v-model="filters.date_to"
+                    type="date"
+                    class="mt-1 block w-full"
+                />
+            </div>
+            <div class="flex items-end space-x-2">
+                <FwbButton color="purple" type="submit">Filtrar</FwbButton>
+                <FwbButton color="alternative" @click.prevent="resetFilters"
+                    >Limpiar</FwbButton
+                >
+            </div>
+        </form>
+
+        <!-- Consultations Table -->
         <FwbTable>
             <FwbTableHead>
                 <FwbTableHeadCell>ID</FwbTableHeadCell>
@@ -327,18 +397,16 @@ async function submitDelete() {
                 <FwbTableHeadCell>Propietario</FwbTableHeadCell>
                 <FwbTableHeadCell>Mascota</FwbTableHeadCell>
                 <FwbTableHeadCell>Motivo</FwbTableHeadCell>
-                <FwbTableHeadCell
-                    ><span class="sr-only">Acciones</span></FwbTableHeadCell
-                >
+                <FwbTableHeadCell>Acciones</FwbTableHeadCell>
             </FwbTableHead>
             <FwbTableBody>
                 <FwbTableRow v-if="isEmptyData">
                     <FwbTableCell
                         colspan="6"
                         class="text-center text-gray-500 py-4"
+                        >No se encontraron consultas con los filtros
+                        aplicados.</FwbTableCell
                     >
-                        No hay consultas médicas registradas
-                    </FwbTableCell>
                 </FwbTableRow>
                 <FwbTableRow
                     v-for="consultation in medicalConsultations.data"
@@ -351,25 +419,41 @@ async function submitDelete() {
                     <FwbTableCell class="max-w-xs truncate">{{
                         consultation.reason
                     }}</FwbTableCell>
-                    <FwbTableCell class="space-x-5 whitespace-nowrap">
-                        <!-- AÑADIDO: Enlace para ver -->
-                        <FwbA
-                            href="#"
-                            @click.prevent="openViewModal(consultation)"
-                            ><i class="fa-solid fa-eye text-black"></i
-                        ></FwbA>
-                        <FwbA
-                            href="#"
-                            @click.prevent="openEditModal(consultation)"
+                    <FwbTableCell class="space-x-4 whitespace-nowrap">
+                        <a
+                            :href="
+                                route(
+                                    'medical-consultations.pet-history-report',
+                                    { pet: consultation.pet_id }
+                                )
+                            "
+                            target="_blank"
+                            class="text-red-500 hover:text-red-700"
+                            title="Generar Historial Clínico"
                         >
-                            <i class="fa-solid fa-pencil text-black"></i
-                        ></FwbA>
-                        <FwbA
-                            href="#"
+                            <i class="fa-solid fa-file-pdf fa-lg"></i>
+                        </a>
+                        <button
+                            @click.prevent="openViewModal(consultation)"
+                            class="text-blue-600 hover:text-blue-800"
+                            title="Ver Detalles"
+                        >
+                            <i class="fa-solid fa-eye fa-lg"></i>
+                        </button>
+                        <button
+                            @click.prevent="openEditModal(consultation)"
+                            class="text-yellow-500 hover:text-yellow-700"
+                            title="Editar"
+                        >
+                            <i class="fa-solid fa-pencil fa-lg"></i>
+                        </button>
+                        <button
                             @click.prevent="openDeleteModal(consultation)"
-                            class="text-red-600 hover:underline"
-                            ><i class="fa-solid fa-trash text-black"></i
-                        ></FwbA>
+                            class="text-gray-500 hover:text-gray-700"
+                            title="Eliminar"
+                        >
+                            <i class="fa-solid fa-trash fa-lg"></i>
+                        </button>
                     </FwbTableCell>
                 </FwbTableRow>
             </FwbTableBody>
@@ -395,7 +479,6 @@ async function submitDelete() {
             </template>
             <template #body>
                 <form class="space-y-6" @submit.prevent="submitForm">
-                    <!-- Pet Selection Section -->
                     <div class="mb-4 flex justify-between items-start">
                         <h3 class="text-xl font-semibold text-gray-700">
                             Datos de la mascota
@@ -404,9 +487,8 @@ async function submitDelete() {
                             @click="isSearchPetModal = true"
                             type="button"
                             color="purple"
+                            >Seleccionar Mascota</FwbButton
                         >
-                            Seleccionar Mascota
-                        </FwbButton>
                     </div>
                     <div>
                         <div
@@ -448,8 +530,6 @@ async function submitDelete() {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Anamnesis Section -->
                     <FormSectionTitle title="Anamnesis" />
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
@@ -457,56 +537,43 @@ async function submitDelete() {
                                 v-model="form.reason"
                                 label="Motivo de la consulta"
                                 :rows="3"
-                            />
-                            <InputError
+                            /><InputError
                                 class="mt-2"
                                 :message="formErrors.reason?.[0]"
                             />
                         </div>
                         <div>
                             <InputLabel
-                                for="dewormed_at"
                                 value="Fecha de desparasitación"
-                            />
-                            <TextInput
-                                id="dewormed_at"
+                            /><TextInput
                                 v-model="form.dewormed_at"
                                 type="date"
                                 class="mt-1 block w-full"
-                            />
-                            <InputError
+                            /><InputError
                                 class="mt-2"
                                 :message="formErrors.dewormed_at?.[0]"
                             />
                         </div>
                         <div>
                             <InputLabel
-                                for="previous_illnesses"
                                 value="Enfermedades previas"
-                            />
-                            <TextInput
-                                id="previous_illnesses"
+                            /><TextInput
                                 v-model="form.previous_illnesses"
                                 type="text"
                                 class="mt-1 block w-full"
-                            />
-                            <InputError
+                            /><InputError
                                 class="mt-2"
                                 :message="formErrors.previous_illnesses?.[0]"
                             />
                         </div>
                         <div class="md:col-span-2">
                             <InputLabel
-                                for="previous_interventions"
                                 value="Intervenciones previas"
-                            />
-                            <TextInput
-                                id="previous_interventions"
+                            /><TextInput
                                 v-model="form.previous_interventions"
                                 type="text"
                                 class="mt-1 block w-full"
-                            />
-                            <InputError
+                            /><InputError
                                 class="mt-2"
                                 :message="
                                     formErrors.previous_interventions?.[0]
@@ -514,8 +581,6 @@ async function submitDelete() {
                             />
                         </div>
                     </div>
-
-                    <!-- Physical Exam Section -->
                     <FormSectionTitle title="Examen Físico" />
                     <div class="space-y-4">
                         <div
@@ -718,8 +783,6 @@ async function submitDelete() {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Diagnosis and Treatment -->
                     <FormSectionTitle title="Diagnóstico y Tratamiento" />
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -782,20 +845,19 @@ async function submitDelete() {
             </template>
         </FwbModal>
 
-        <!-- AÑADIDO: Modal de vista -->
+        <!-- View Modal -->
         <FwbModal
             size="4xl"
             v-if="isViewModal && selectedConsultation"
             @close="closeAllModals"
         >
-            <template #header>
-                <h3 class="text-xl font-semibold">
+            <template #header
+                ><h3 class="text-xl font-semibold">
                     Detalles de la Consulta Médica
-                </h3>
-            </template>
+                </h3></template
+            >
             <template #body>
                 <div class="space-y-6">
-                    <!-- Pet Details -->
                     <section>
                         <FormSectionTitle title="Datos de la Mascota" />
                         <div
@@ -821,7 +883,6 @@ async function submitDelete() {
                             </p>
                         </div>
                     </section>
-                    <!-- Anamnesis Details -->
                     <section>
                         <FormSectionTitle title="Anamnesis" />
                         <div class="space-y-2 text-sm mt-2">
@@ -855,7 +916,6 @@ async function submitDelete() {
                             </p>
                         </div>
                     </section>
-                    <!-- Physical Exam Details -->
                     <section>
                         <FormSectionTitle title="Examen Físico" />
                         <div
@@ -946,7 +1006,6 @@ async function submitDelete() {
                             </p>
                         </div>
                     </section>
-                    <!-- Diagnosis and Treatment Details -->
                     <section>
                         <FormSectionTitle title="Diagnóstico y Tratamiento" />
                         <div class="space-y-2 text-sm mt-2">
