@@ -11,9 +11,8 @@ class PetRepository
     public function getAll()
     {
         return $this->model
-            ->with(['owner:id,first_name,last_name', 'breed' => function ($query) {
-                $query->with('specie:id,name');
-            }])
+            // CORREGIDO: Añadido 'ci' a la lista de columnas del propietario.
+            ->with(['owner:id,first_name,last_name,ci', 'breed.specie:id,name'])
             ->orderBy('updated_at', 'desc')
             ->paginate();
     }
@@ -39,16 +38,40 @@ class PetRepository
         return $this->model->destroy($id);
     }
 
-    public function search($search)
+    /**
+     * AÑADIDO: Lógica de búsqueda para la tabla principal, paginada.
+     */
+    public function searchWithFilters(array $filters)
+    {
+        // CORREGIDO: Añadido 'ci' a la lista de columnas del propietario.
+        $query = $this->model->with(['owner:id,first_name,last_name,ci', 'breed.specie:id,name']);
+
+        if (!empty($filters['search_term'])) {
+            $term = $filters['search_term'];
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                    ->orWhereHas('owner', function ($qOwner) use ($term) {
+                        $qOwner->where('first_name', 'like', "%{$term}%")
+                            ->orWhere('last_name', 'like', "%{$term}%");
+                    });
+            });
+        }
+
+        return $query->orderBy('updated_at', 'desc')->paginate()->appends($filters);
+    }
+
+
+    /**
+     * CORREGIDO: El método de búsqueda original, ahora renombrado para el autocompletado.
+     */
+    public function autocompleteSearch(string $term)
     {
         return $this->model
-            ->with(['owner:id,ci,first_name,last_name', 'breed' => function ($query) {
-                $query->with('specie:id,name');
-            }])
-            ->whereLike('name', "%$search%")
-            ->orWhereHas('owner', function ($query) use ($search) {
-                $query->whereLike('first_name', "%$search%")
-                    ->orWhereLike('last_name', "%$search%");
+            ->with(['owner:id,ci,first_name,last_name', 'breed.specie:id,name'])
+            ->where('name', 'like', "%{$term}%")
+            ->orWhereHas('owner', function ($query) use ($term) {
+                $query->where('first_name', 'like', "%{$term}%")
+                    ->orWhere('last_name', 'like', "%{$term}%");
             })
             ->orderBy('updated_at', 'desc')
             ->take(8)

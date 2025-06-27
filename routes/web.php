@@ -59,9 +59,17 @@ Route::middleware([
         Route::get('/breeds-search', [BreedController::class, 'search'])->name('breeds.search');
         Route::resource('/breeds', BreedController::class);
 
-        Route::post('/pets-prepare-store-data', [PetController::class, 'prepareStoreData'])->name('pets.prepareStoreData');
-        Route::get('/pets-search', [PetController::class, 'search'])->name('pets.search');
-        Route::resource('/pets', PetController::class);
+        Route::group(['prefix' => 'pets', 'as' => 'pets.'], function () {
+            Route::get('/', [PetController::class, 'index'])->name('index');
+            Route::get('search', [PetController::class, 'search'])->name('search'); // Para filtrar la lista principal
+            Route::post('/', [PetController::class, 'store'])->name('store');
+            Route::put('{pet}', [PetController::class, 'update'])->name('update');
+            Route::delete('{pet}', [PetController::class, 'destroy'])->name('destroy');
+
+            // Rutas auxiliares para la lógica del formulario en el modal
+            Route::get('autocomplete', [PetController::class, 'autocomplete'])->name('autocomplete'); // Búsqueda para otras partes del sistema
+            Route::post('prepare-data', [PetController::class, 'prepareStoreData'])->name('prepare-data');
+        });
     });
 
     Route::group(['prefix' => 'sales'], function () {
