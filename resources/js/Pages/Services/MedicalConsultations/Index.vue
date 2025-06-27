@@ -327,7 +327,9 @@ async function submitDelete() {
                 <FwbTableHeadCell>Propietario</FwbTableHeadCell>
                 <FwbTableHeadCell>Mascota</FwbTableHeadCell>
                 <FwbTableHeadCell>Motivo</FwbTableHeadCell>
-                <FwbTableHeadCell>Acciones</FwbTableHeadCell>
+                <FwbTableHeadCell
+                    ><span class="sr-only">Acciones</span></FwbTableHeadCell
+                >
             </FwbTableHead>
             <FwbTableBody>
                 <FwbTableRow v-if="isEmptyData">
@@ -349,24 +351,25 @@ async function submitDelete() {
                     <FwbTableCell class="max-w-xs truncate">{{
                         consultation.reason
                     }}</FwbTableCell>
-                    <FwbTableCell class="space-x-2 whitespace-nowrap">
+                    <FwbTableCell class="space-x-5 whitespace-nowrap">
                         <!-- AÑADIDO: Enlace para ver -->
                         <FwbA
                             href="#"
                             @click.prevent="openViewModal(consultation)"
-                            >Ver</FwbA
-                        >
+                            ><i class="fa-solid fa-eye text-black"></i
+                        ></FwbA>
                         <FwbA
                             href="#"
                             @click.prevent="openEditModal(consultation)"
-                            >Editar</FwbA
                         >
+                            <i class="fa-solid fa-pencil text-black"></i
+                        ></FwbA>
                         <FwbA
                             href="#"
                             @click.prevent="openDeleteModal(consultation)"
                             class="text-red-600 hover:underline"
-                            >Eliminar</FwbA
-                        >
+                            ><i class="fa-solid fa-trash text-black"></i
+                        ></FwbA>
                     </FwbTableCell>
                 </FwbTableRow>
             </FwbTableBody>
