@@ -40,8 +40,14 @@ Route::middleware([
         Route::resource('/roles', RoleController::class);
     });
     Route::group(['prefix' => 'services'], function () {
-        Route::get('/customers-search', [CustomerController::class, 'search'])->name('customers.search');
-        Route::resource('/customers', CustomerController::class);
+
+        Route::group(['prefix' => 'customers', 'as' => 'customers.'], function () {
+            Route::get('/', [CustomerController::class, 'index'])->name('index');
+            Route::get('search', [CustomerController::class, 'search'])->name('search'); // Para filtrar la lista y para autocomplete
+            Route::post('/', [CustomerController::class, 'store'])->name('store');
+            Route::put('{customer}', [CustomerController::class, 'update'])->name('update');
+            Route::delete('{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+        });
 
         Route::group(['prefix' => 'medical-consultations', 'as' => 'medical-consultations.'], function () {
             Route::get('/', [MedicalConsultationController::class, 'index'])->name('index');

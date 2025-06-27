@@ -28,16 +28,33 @@ class CustomerRepository
         return $this->model->where('id', $id)->update($data);
     }
 
-    public function search()
+    public function delete($id)
     {
-        $search = request('search');
-        return Customer::where(function ($query) use ($search) {
-            $query->whereLike('first_name', "%$search%")
-                ->orWhereLike('last_name', "%$search%")
-                ->orWhereLike('ci', "%$search%");
-        })
-            ->select('id', 'first_name', 'last_name', 'ci')
-            ->take(5)
-            ->get();
+        return $this->model->destroy($id);
+    }
+
+    /**
+     * CORREGIDO: Método de búsqueda ahora maneja filtros y puede paginar.
+     */
+    public function search(array $filters, bool $paginate = true)
+    {
+        $query = $this->model->query();
+
+        if (!empty($filters['search_term'])) {
+            $term = $filters['search_term'];
+            $query->where(function ($q) use ($term) {
+                $q->where('first_name', 'like', "%{$term}%")
+                    ->orWhere('last_name', 'like', "%{$term}%")
+                    ->orWhere('ci', 'like', "%{$term}%");
+            });
+        }
+
+        $query->orderBy('updated_at', 'desc');
+
+        if ($paginate) {
+            return $query->paginate(15)->appends($filters);
+        }
+
+        return $query->take(8)->get();
     }
 }

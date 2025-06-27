@@ -6,86 +6,56 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Services\StoreCustomerRequest;
 use App\Http\Requests\Services\UpdateCustomerRequest;
 use App\Models\Services\Customer;
+use Illuminate\Http\JsonResponse;
 use App\Services\Services\CustomerService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class CustomerController extends Controller
 {
     public function __construct(protected CustomerService $customerService) {}
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): InertiaResponse
     {
-        $customers = $this->customerService->getAllCustomers();
         return Inertia::render('Services/Customers/Index', [
-            'customers' => $customers,
+            'customers' => $this->customerService->getAllCustomers(),
+            'filters' => [],
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function search(Request $request)
     {
-        return Inertia::render(
-            'Services/Customers/Form',
-            ['formAction' => 'create']
-        );
+        $filters = $request->only('search_term');
+
+        // Si la petición es para autocompletar, devuelve JSON
+        if ($request->has('autocomplete')) {
+            $customers = $this->customerService->autocompleteSearch($request->search_term);
+            return response()->json($customers);
+        }
+
+        // Si no, es para filtrar la tabla, devuelve la vista
+        return Inertia::render('Services/Customers/Index', [
+            'customers' => $this->customerService->search($filters),
+            'filters' => $filters,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreCustomerRequest $request)
+    public function store(StoreCustomerRequest $request): JsonResponse
     {
-        $this->customerService->createCustomer($request->validated());
-        return redirect()->route('customers.index');
+        $customer = $this->customerService->createCustomer($request->validated());
+        return response()->json(['message' => 'Cliente registrado correctamente.', 'customer' => $customer], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(UpdateCustomerRequest $request, Customer $customer): JsonResponse
     {
-        //
+        $this->customerService->update($request->validated(), $customer->id);
+        return response()->json(['message' => 'Cliente actualizado correctamente.']);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(Customer $customer): JsonResponse
     {
-        $customer = $this->customerService->getCustomerById($id);
-        return Inertia::render(
-            'Services/Customers/Form',
-            ['formAction' => 'edit', 'customer' => $customer]
-        );
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateCustomerRequest $request, string $id)
-    {
-        $data = $request->validated();
-        $this->customerService->update($data, $id);
-        return redirect()->route('customers.index');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    public function search()
-    {
-        $customers = $this->customerService->search();
-        return response()->json($customers);
+        $this->customerService->delete($customer->id);
+        return response()->json(['message' => 'Cliente eliminado correctamente.']);
     }
 }
