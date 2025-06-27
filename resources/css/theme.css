@@ -1,0 +1,47 @@
+/* resources/css/themes.css */
+
+/* 1. Tema por Defecto (Claro/Predeterminado) */
+:root {
+  --color-background: #F9FAFB; /* gray-50 */
+  --color-background-secondary: #FFFFFF; /* white */
+  --color-text-base: #1F2937; /* gray-800 */
+  --color-text-muted: #6B7280; /* gray-500 */
+  --color-primary: #8B5CF6; /* purple-500 */
+  --color-primary-hover: #7C3AED; /* purple-600 */
+  --color-border: #E5E7EB; /* gray-200 */
+  --font-size-base: 16px;
+}
+
+/* 2. Tema Oscuro */
+.theme-dark {
+  --color-background: #1F2937; /* gray-800 */
+  --color-background-secondary: #374151; /* gray-700 */
+  --color-text-base: #F9FAFB; /* gray-50 */
+  --color-text-muted: #9CA3AF; /* gray-400 */
+  --color-primary: #A78BFA; /* purple-400 */
+  --color-primary-hover: #8B5CF6; /* purple-500 */
+  --color-border: #4B5563; /* gray-600 */
+}
+
+/* 3. Tema Femenino (Tonos Lavanda) */
+.theme-female {
+  --color-background: #F5F3FF; /* violet-50 */
+  --color-background-secondary: #FFFFFF;
+  --color-text-base: #4C1D95; /* violet-900 */
+  --color-text-muted: #6D28D9; /* violet-700 */
+  --color-primary: #A78BFA; /* purple-400 */
+  --color-primary-hover: #8B5CF6; /* purple-500 */
+  --color-border: #DDD6FE; /* violet-200 */
+}
+
+/* 4. Tema para Adulto Mayor (Alto Contraste y Fuente Grande) */
+.theme-elderly {
+  --color-background: #FEFCE8; /* yellow-50, un tono sepia suave */
+  --color-background-secondary: #FFFFFF;
+  --color-text-base: #000000; /* Texto negro puro para máxima legibilidad */
+  --color-text-muted: #44403C; /* stone-700 */
+  --color-primary: #1D4ED8; /* blue-700, color fuerte y claro */
+  --color-primary-hover: #1E40AF; /* blue-800 */
+  --color-border: #A8A29E; /* stone-400 */
+  --font-size-base: 18px; /* Aumentamos el tamaño de la fuente base */
+}

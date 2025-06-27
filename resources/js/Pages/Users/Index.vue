@@ -104,6 +104,8 @@ function openEditModal(user) {
         ...defaultFormState,
         ...user,
         role_id: user.roles[0]?.id || "",
+        password: "",
+        password_confirmation: "",
     };
     formErrors.value = {};
     isCreateOrEditModal.value = true;
@@ -130,7 +132,6 @@ async function submitForm() {
     loading.value = true;
     formErrors.value = {};
 
-    // Si la contraseña es automática, no la enviamos (el backend la generará)
     const payload = { ...form.value };
     if (autoPassword.value) {
         delete payload.password;
@@ -197,7 +198,7 @@ async function submitDelete() {
 
         <!-- Header & Actions -->
         <div class="flex justify-between my-6 items-center">
-            <h2 class="text-2xl font-semibold">Usuarios</h2>
+            <h2 class="text-2xl font-semibold themed-text-base">Usuarios</h2>
             <FwbButton
                 v-if="canCreateUsers"
                 @click="openCreateModal"
@@ -209,16 +210,16 @@ async function submitDelete() {
         <!-- Filters -->
         <form
             @submit.prevent="applyFilters"
-            class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-100 rounded-lg"
+            class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 themed-bg-secondary-light rounded-lg"
         >
             <div class="md:col-span-3">
-                <label class="block text-sm font-medium text-gray-700"
+                <label class="block text-sm font-medium themed-text-muted"
                     >Buscar por Nombre, Apellido o Correo</label
                 >
                 <TextInput
                     v-model="filters.search_term"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full themed-input"
                     placeholder="Escriba para buscar..."
                 />
             </div>
@@ -231,49 +232,67 @@ async function submitDelete() {
         </form>
 
         <!-- Users Table -->
-        <FwbTable>
+        <FwbTable class="themed-table">
             <FwbTableHead>
-                <FwbTableHeadCell>Nombre Completo</FwbTableHeadCell>
-                <FwbTableHeadCell>Correo</FwbTableHeadCell>
-                <FwbTableHeadCell>Rol</FwbTableHeadCell>
-                <FwbTableHeadCell>Actualizado</FwbTableHeadCell>
-                <FwbTableHeadCell
+                <FwbTableHeadCell class="themed-table-header"
+                    >Nombre Completo</FwbTableHeadCell
+                >
+                <FwbTableHeadCell class="themed-table-header"
+                    >Correo</FwbTableHeadCell
+                >
+                <FwbTableHeadCell class="themed-table-header"
+                    >Rol</FwbTableHeadCell
+                >
+                <FwbTableHeadCell class="themed-table-header"
+                    >Actualizado</FwbTableHeadCell
+                >
+                <FwbTableHeadCell class="themed-table-header"
                     ><span class="sr-only">Acciones</span></FwbTableHeadCell
                 >
             </FwbTableHead>
-            <FwbTableBody>
+            <FwbTableBody class="themed-table-body">
                 <FwbTableRow v-if="!users.data.length"
                     ><FwbTableCell
                         colspan="5"
-                        class="text-center py-4 text-gray-500"
+                        class="text-center py-4 themed-text-muted"
                         >No se encontraron usuarios.</FwbTableCell
                     ></FwbTableRow
                 >
-                <FwbTableRow v-for="user in users.data" :key="user.id">
-                    <FwbTableCell>{{ user.full_name }}</FwbTableCell>
-                    <FwbTableCell>{{ user.email }}</FwbTableCell>
-                    <FwbTableCell>{{
+                <FwbTableRow
+                    v-for="user in users.data"
+                    :key="user.id"
+                    class="themed-table-row"
+                >
+                    <FwbTableCell class="themed-text-base">{{
+                        user.full_name
+                    }}</FwbTableCell>
+                    <FwbTableCell class="themed-text-muted">{{
+                        user.email
+                    }}</FwbTableCell>
+                    <FwbTableCell class="themed-text-base">{{
                         user.roles[0]?.name || "N/A"
                     }}</FwbTableCell>
-                    <FwbTableCell>{{ user.updated_at }}</FwbTableCell>
+                    <FwbTableCell class="themed-text-muted">{{
+                        user.updated_at
+                    }}</FwbTableCell>
                     <FwbTableCell class="space-x-4 whitespace-nowrap">
                         <button
                             @click="openViewModal(user)"
-                            class="text-blue-600 hover:text-blue-800"
+                            class="themed-action-button-view"
                             title="Ver Detalles"
                         >
                             <i class="fa-solid fa-eye fa-lg"></i>
                         </button>
                         <button
                             @click="openEditModal(user)"
-                            class="text-yellow-500 hover:text-yellow-700"
+                            class="themed-action-button-edit"
                             title="Editar"
                         >
                             <i class="fa-solid fa-pencil fa-lg"></i>
                         </button>
                         <button
                             @click="openDeleteModal(user)"
-                            class="text-red-500 hover:text-red-700"
+                            class="themed-action-button-delete"
                             title="Eliminar"
                         >
                             <i class="fa-solid fa-trash fa-lg"></i>
@@ -294,12 +313,15 @@ async function submitDelete() {
         <!-- View Modal -->
         <FwbModal size="lg" v-if="isViewModal" @close="closeAllModals">
             <template #header
-                ><h3 class="text-xl font-semibold">
+                ><h3 class="text-xl font-semibold themed-text-base">
                     Detalles del Usuario
                 </h3></template
             >
             <template #body>
-                <div v-if="selectedUser" class="space-y-4 text-sm">
+                <div
+                    v-if="selectedUser"
+                    class="space-y-4 text-sm themed-text-base p-2"
+                >
                     <p><strong>Nombre:</strong> {{ selectedUser.full_name }}</p>
                     <p><strong>Correo:</strong> {{ selectedUser.email }}</p>
                     <p>
@@ -323,9 +345,13 @@ async function submitDelete() {
 
         <!-- Delete Modal -->
         <FwbModal v-if="isDeleteModal" @close="closeAllModals">
-            <template #header>Confirmar Eliminación</template>
+            <template #header
+                ><h3 class="themed-text-base">
+                    Confirmar Eliminación
+                </h3></template
+            >
             <template #body
-                ><p class="text-center text-lg">
+                ><p class="text-center text-lg themed-text-base">
                     ¿Seguro que deseas eliminar a
                     <strong>{{ selectedUser?.full_name }}</strong
                     >?
@@ -349,17 +375,20 @@ async function submitDelete() {
         <!-- Create/Edit Modal -->
         <FwbModal size="2xl" v-if="isCreateOrEditModal" @close="closeAllModals">
             <template #header
-                ><h3 class="text-xl font-semibold">
+                ><h3 class="text-xl font-semibold themed-text-base">
                     {{ modalMode === "edit" ? "Editar" : "Registrar" }} Usuario
                 </h3></template
             >
             <template #body>
-                <form class="space-y-4" @submit.prevent="submitForm">
+                <form
+                    class="space-y-4 themed-text-base p-2"
+                    @submit.prevent="submitForm"
+                >
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <InputLabel value="Nombre(s)" /><TextInput
                                 v-model="form.first_name"
-                                class="mt-1 w-full"
+                                class="mt-1 w-full themed-input"
                             /><InputError
                                 :message="formErrors.first_name?.[0]"
                             />
@@ -367,7 +396,7 @@ async function submitDelete() {
                         <div>
                             <InputLabel value="Apellido(s)" /><TextInput
                                 v-model="form.last_name"
-                                class="mt-1 w-full"
+                                class="mt-1 w-full themed-input"
                             /><InputError
                                 :message="formErrors.last_name?.[0]"
                             />
@@ -377,14 +406,14 @@ async function submitDelete() {
                         <InputLabel value="Correo Electrónico" /><TextInput
                             v-model="form.email"
                             type="email"
-                            class="mt-1 w-full"
+                            class="mt-1 w-full themed-input"
                         /><InputError :message="formErrors.email?.[0]" />
                     </div>
                     <div>
                         <InputLabel value="Rol" />
                         <select
                             v-model="form.role_id"
-                            class="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                            class="w-full mt-1 rounded-md shadow-sm themed-input"
                         >
                             <option value="" disabled>Seleccione un rol</option>
                             <option
@@ -397,11 +426,11 @@ async function submitDelete() {
                         </select>
                         <InputError :message="formErrors.role_id?.[0]" />
                     </div>
-                    <hr />
+                    <hr class="themed-border" />
                     <div>
-                        <fwb-toggle
+                        <FwbToggle
                             v-model="autoPassword"
-                            label="Generar contraseña automáticamente"
+                            label="Generar/Mantener contraseña automáticamente"
                         />
                     </div>
                     <div
@@ -413,12 +442,12 @@ async function submitDelete() {
                             <TextInput
                                 v-model="form.password"
                                 :type="showPassword ? 'text' : 'password'"
-                                class="mt-1 w-full pr-10"
+                                class="mt-1 w-full pr-10 themed-input"
                             />
                             <button
                                 type="button"
                                 @click="showPassword = !showPassword"
-                                class="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-sm leading-5"
+                                class="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-sm leading-5 themed-text-muted"
                             >
                                 <i
                                     class="fa-solid"
@@ -435,7 +464,7 @@ async function submitDelete() {
                             <TextInput
                                 v-model="form.password_confirmation"
                                 :type="showPassword ? 'text' : 'password'"
-                                class="mt-1 w-full"
+                                class="mt-1 w-full themed-input"
                             />
                             <InputError
                                 :message="formErrors.password_confirmation?.[0]"
@@ -444,14 +473,14 @@ async function submitDelete() {
                     </div>
                     <p
                         v-if="modalMode === 'edit' && autoPassword"
-                        class="text-xs text-gray-500"
+                        class="text-xs themed-text-muted"
                     >
-                        Dejar los campos de contraseña vacíos para no cambiarla.
+                        La contraseña actual se mantendrá sin cambios.
                     </p>
                 </form>
             </template>
-            <template #footer>
-                <div class="flex justify-end">
+            <template #footer
+                ><div class="flex justify-end">
                     <FwbButton @click="closeAllModals" color="alternative"
                         >Cancelar</FwbButton
                     ><FwbButton
@@ -461,8 +490,87 @@ async function submitDelete() {
                         class="ml-2"
                         >Guardar</FwbButton
                     >
-                </div>
-            </template>
+                </div></template
+            >
         </FwbModal>
     </AdminLayout>
 </template>
+
+<style scoped>
+/* Estilos que usan las variables de tema */
+.themed-text-base {
+    color: var(--color-text-base);
+}
+.themed-text-muted {
+    color: var(--color-text-muted);
+}
+.themed-bg-secondary-light {
+    background-color: var(--color-background-secondary);
+}
+.themed-border {
+    border-color: var(--color-border);
+}
+
+.themed-input {
+    background-color: var(--color-background-secondary);
+    color: var(--color-text-base);
+    border: 1px solid var(--color-border);
+}
+.themed-input:focus {
+    --tw-ring-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.themed-table-header {
+    background-color: var(--color-background);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.themed-table-body {
+    background-color: var(--color-background-secondary);
+}
+
+.themed-table-row {
+    border-bottom: 1px solid var(--color-border);
+}
+.themed-table-row:hover {
+    background-color: var(--color-background);
+}
+
+.themed-action-button-view {
+    color: #3b82f6;
+}
+.themed-action-button-view:hover {
+    color: #1d4ed8;
+}
+.themed-action-button-edit {
+    color: #f59e0b;
+}
+.themed-action-button-edit:hover {
+    color: #b45309;
+}
+.themed-action-button-delete {
+    color: #ef4444;
+}
+.themed-action-button-delete:hover {
+    color: #b91c1c;
+}
+
+/* AÑADIDO: Estilos para el modal */
+:deep(.fwb-modal-header) {
+    background-color: var(--color-background-secondary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+:deep(.fwb-modal-body) {
+    background-color: var(--color-background-secondary);
+}
+
+:deep(.fwb-modal-footer) {
+    background-color: var(--color-background-secondary);
+    border-top: 1px solid var(--color-border);
+}
+</style>
