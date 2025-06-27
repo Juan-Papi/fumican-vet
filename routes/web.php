@@ -36,7 +36,13 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
     Route::group(['prefix' => 'users'], function () {
-        Route::resource('/users', UserController::class);
+        Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('search', [UserController::class, 'search'])->name('search');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::put('{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
+        });
         Route::resource('/roles', RoleController::class);
     });
     Route::group(['prefix' => 'services'], function () {

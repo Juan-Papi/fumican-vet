@@ -8,104 +8,90 @@ use App\Http\Requests\Users\UpdateUserRequest;
 use App\Models\User;
 use App\Services\Users\RoleService;
 use App\Services\Users\UserService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
+use Illuminate\Database\QueryException;
 
 class UserController extends Controller
 {
     public function __construct(protected UserService $service, protected RoleService $roleService) {}
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): InertiaResponse
     {
-        $users = $this->service->getAllPaginated();
         return Inertia::render('Users/Index', [
-            'users' => $users,
+            'users' => $this->service->getAllPaginated(),
+            'roles' => $this->roleService->getAll(),
+            'filters' => [],
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function search(Request $request): InertiaResponse
     {
-        $roles = $this->roleService->getAll();
-        return Inertia::render(
-            'Users/Form',
-            ['formAction' => 'create', 'roles' => $roles]
-        );
+        $filters = $request->only('search_term');
+        return Inertia::render('Users/Index', [
+            'users' => $this->service->search($filters),
+            'roles' => $this->roleService->getAll(),
+            'filters' => $filters,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreUserRequest $request)
+    public function store(StoreUserRequest $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
             $data = $request->validated();
             $user = $this->service->create($data);
             $user->roles()->attach($data['role_id']);
             DB::commit();
-            return redirect()->route('users.index');
+            return response()->json(['message' => 'Usuario creado correctamente.'], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Ocurrió un error al crear el usuario');
+            return response()->json(['message' => 'Error al crear el usuario: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $user = $this->service->getById($id);
-        $roles = $this->roleService->getAll();
-        return Inertia::render(
-            'Users/Form',
-            [
-                'user' => $user,
-                'formAction' => 'edit',
-                'roles' => $roles
-            ]
-        );
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateUserRequest $request, string $id)
-    {
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
             $data = $request->validated();
-            $this->service->update($id, $data);
-            $user = $this->service->getById($id);
-            $user->roles()->sync($data['role_id']);
+            $this->service->update($user->id, $data);
+            if (isset($data['role_id'])) {
+                $user->roles()->sync($data['role_id']);
+            }
             DB::commit();
-            return redirect()->route('users.index');
+            return response()->json(['message' => 'Usuario actualizado correctamente.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Ocurrió un error al actualizar el usuario');
+            return response()->json(['message' => 'Error al actualizar el usuario: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(User $user): JsonResponse
     {
-        //
+        if (Auth::user()->id == $user->id) {
+            return response()->json(['message' => 'No puedes eliminar tu propio usuario.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $this->service->delete($user->id);
+            DB::commit();
+            return response()->json(['message' => 'Usuario eliminado correctamente.']);
+        } catch (QueryException $e) {
+            DB::rollBack();
+            // Código '23000' es el estándar SQL para violación de integridad (foreign key)
+            if ($e->getCode() == '23000') {
+                return response()->json(['message' => 'No se puede eliminar: el usuario tiene registros asociados.'], 409); // 409 Conflict
+            }
+            return response()->json(['message' => 'Error de base de datos al eliminar.'], 500);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Ocurrió un error inesperado al eliminar.'], 500);
+        }
     }
 }

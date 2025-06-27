@@ -23,11 +23,17 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Se obtiene el ID del usuario de la ruta para ignorarlo en la regla 'unique'
+        $userId = $this->route('user')->id;
+
         return [
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
-            'email' => 'required|email',
+            // CORREGIDO: Se asegura que el email sea único, ignorando al usuario actual.
+            'email' => 'required|email|unique:users,email,' . $userId,
             'role_id' => 'required|exists:roles,id',
+            // AÑADIDO: Reglas para la contraseña opcional.
+            'password' => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
         ];
     }
 }
