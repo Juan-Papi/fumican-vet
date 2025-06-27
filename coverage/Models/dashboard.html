@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /home/ruben/UAGRM/Ing de Calidad/Proyecto/fumican-vet/app/Models</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../_css/bootstrap.min.css?v=11.0.7" rel="stylesheet" type="text/css">
+  <link href="../_css/nv.d3.min.css?v=11.0.7" rel="stylesheet" type="text/css">
+  <link href="../_css/style.css?v=11.0.7" rel="stylesheet" type="text/css">
+  <link href="../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../index.html">/home/ruben/UAGRM/Ing de Calidad/Proyecto/fumican-vet/app</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Models</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Sales/Category.php.html#9">App\Models\Sales\Category</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Inventory.php.html#8">App\Models\Sales\Inventory</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Medicament.php.html#9">App\Models\Sales\Medicament</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNote.php.html#9">App\Models\Sales\PurchaseNote</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNoteDetail.php.html#8">App\Models\Sales\PurchaseNoteDetail</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNote.php.html#10">App\Models\Sales\SalesNote</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNoteDetail.php.html#8">App\Models\Sales\SalesNoteDetail</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/StockMovement.php.html#7">App\Models\Sales\StockMovement</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Supplier.php.html#8">App\Models\Sales\Supplier</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Warehouse.php.html#9">App\Models\Sales\Warehouse</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Breed.php.html#10">App\Models\Services\Breed</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Customer.php.html#12">App\Models\Services\Customer</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MedicalConsultation.php.html#12">App\Models\Services\MedicalConsultation</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Pet.php.html#11">App\Models\Services\Pet</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Specie.php.html#9">App\Models\Services\Specie</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Treatment.php.html#9">App\Models\Services\Treatment</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Users/Menu.php.html#8">App\Models\Users\Menu</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Users/Permission.php.html#8">App\Models\Users\Permission</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="User.php.html#21">App\Models\User</a></td><td class="text-right">80%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Sales/Category.php.html#24"><abbr title="App\Models\Sales\Category::medicaments">medicaments</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Inventory.php.html#26"><abbr title="App\Models\Sales\Inventory::warehouse">warehouse</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Inventory.php.html#31"><abbr title="App\Models\Sales\Inventory::medicament">medicament</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Inventory.php.html#36"><abbr title="App\Models\Sales\Inventory::purchaseNoteDetail">purchaseNoteDetail</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Medicament.php.html#29"><abbr title="App\Models\Sales\Medicament::purchaseNoteDetails">purchaseNoteDetails</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Medicament.php.html#34"><abbr title="App\Models\Sales\Medicament::inventories">inventories</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Medicament.php.html#39"><abbr title="App\Models\Sales\Medicament::category">category</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Medicament.php.html#44"><abbr title="App\Models\Sales\Medicament::salesNoteDetails">salesNoteDetails</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNote.php.html#27"><abbr title="App\Models\Sales\PurchaseNote::warehouse">warehouse</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNote.php.html#32"><abbr title="App\Models\Sales\PurchaseNote::supplier">supplier</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNote.php.html#37"><abbr title="App\Models\Sales\PurchaseNote::user">user</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNote.php.html#42"><abbr title="App\Models\Sales\PurchaseNote::purchaseNoteDetails">purchaseNoteDetails</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNoteDetail.php.html#27"><abbr title="App\Models\Sales\PurchaseNoteDetail::purchaseNote">purchaseNote</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNoteDetail.php.html#32"><abbr title="App\Models\Sales\PurchaseNoteDetail::medicament">medicament</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/PurchaseNoteDetail.php.html#37"><abbr title="App\Models\Sales\PurchaseNoteDetail::inventory">inventory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNote.php.html#29"><abbr title="App\Models\Sales\SalesNote::user">user</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNote.php.html#34"><abbr title="App\Models\Sales\SalesNote::customer">customer</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNote.php.html#39"><abbr title="App\Models\Sales\SalesNote::warehouse">warehouse</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNote.php.html#44"><abbr title="App\Models\Sales\SalesNote::salesNoteDetails">salesNoteDetails</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNoteDetail.php.html#26"><abbr title="App\Models\Sales\SalesNoteDetail::salesNote">salesNote</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/SalesNoteDetail.php.html#31"><abbr title="App\Models\Sales\SalesNoteDetail::medicament">medicament</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/StockMovement.php.html#15"><abbr title="App\Models\Sales\StockMovement::inventory">inventory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/StockMovement.php.html#20"><abbr title="App\Models\Sales\StockMovement::salesNoteDetail">salesNoteDetail</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Supplier.php.html#26"><abbr title="App\Models\Sales\Supplier::purchaseNotes">purchaseNotes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Warehouse.php.html#26"><abbr title="App\Models\Sales\Warehouse::purchaseNotes">purchaseNotes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Warehouse.php.html#31"><abbr title="App\Models\Sales\Warehouse::inventories">inventories</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Sales/Warehouse.php.html#36"><abbr title="App\Models\Sales\Warehouse::saleNotes">saleNotes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Breed.php.html#19"><abbr title="App\Models\Services\Breed::specie">specie</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Breed.php.html#24"><abbr title="App\Models\Services\Breed::pets">pets</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Customer.php.html#25"><abbr title="App\Models\Services\Customer::getFullNameAttribute">getFullNameAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Customer.php.html#29"><abbr title="App\Models\Services\Customer::getCreatedAtAttribute">getCreatedAtAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Customer.php.html#34"><abbr title="App\Models\Services\Customer::getUpdatedAtAttribute">getUpdatedAtAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Customer.php.html#39"><abbr title="App\Models\Services\Customer::pets">pets</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Customer.php.html#43"><abbr title="App\Models\Services\Customer::saleNotes">saleNotes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MedicalConsultation.php.html#52"><abbr title="App\Models\Services\MedicalConsultation::pet">pet</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MedicalConsultation.php.html#60"><abbr title="App\Models\Services\MedicalConsultation::user">user</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MedicalConsultation.php.html#68"><abbr title="App\Models\Services\MedicalConsultation::treatments">treatments</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Pet.php.html#25"><abbr title="App\Models\Services\Pet::breed">breed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Pet.php.html#35"><abbr title="App\Models\Services\Pet::owner">owner</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Pet.php.html#40"><abbr title="App\Models\Services\Pet::medicalConsultations">medicalConsultations</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Specie.php.html#17"><abbr title="App\Models\Services\Specie::breeds">breeds</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/Treatment.php.html#27"><abbr title="App\Models\Services\Treatment::medicalConsultation">medicalConsultation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="User.php.html#89"><abbr title="App\Models\User::medicalConsultations">medicalConsultations</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="User.php.html#99"><abbr title="App\Models\User::saleNotes">saleNotes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="User.php.html#120"><abbr title="App\Models\User::getFullNameAttribute">getFullNameAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Users/Menu.php.html#16"><abbr title="App\Models\Users\Menu::submenus">submenus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Users/Permission.php.html#10"><abbr title="App\Models\Users\Permission::menu">menu</abbr></a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 11.0.7</a> using <a href="https://www.php.net/" target="_top">PHP 8.3.22</a> and <a href="https://phpunit.de/">PHPUnit 11.4.3</a> at Fri Jun 27 8:51:04 UTC 2025.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../_js/jquery.min.js?v=11.0.7" type="text/javascript"></script>
+  <script src="../_js/d3.min.js?v=11.0.7" type="text/javascript"></script>
+  <script src="../_js/nv.d3.min.js?v=11.0.7" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([18,0,0,0,0,0,0,0,0,1,0,1], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([47,0,0,0,0,0,0,0,0,0,0,4], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[0,1,"<a href=\"Sales\/Category.php.html#9\">App\\Models\\Sales\\Category<\/a>"],[0,3,"<a href=\"Sales\/Inventory.php.html#8\">App\\Models\\Sales\\Inventory<\/a>"],[0,4,"<a href=\"Sales\/Medicament.php.html#9\">App\\Models\\Sales\\Medicament<\/a>"],[0,4,"<a href=\"Sales\/PurchaseNote.php.html#9\">App\\Models\\Sales\\PurchaseNote<\/a>"],[0,3,"<a href=\"Sales\/PurchaseNoteDetail.php.html#8\">App\\Models\\Sales\\PurchaseNoteDetail<\/a>"],[0,4,"<a href=\"Sales\/SalesNote.php.html#10\">App\\Models\\Sales\\SalesNote<\/a>"],[0,2,"<a href=\"Sales\/SalesNoteDetail.php.html#8\">App\\Models\\Sales\\SalesNoteDetail<\/a>"],[0,2,"<a href=\"Sales\/StockMovement.php.html#7\">App\\Models\\Sales\\StockMovement<\/a>"],[0,1,"<a href=\"Sales\/Supplier.php.html#8\">App\\Models\\Sales\\Supplier<\/a>"],[0,3,"<a href=\"Sales\/Warehouse.php.html#9\">App\\Models\\Sales\\Warehouse<\/a>"],[0,2,"<a href=\"Services\/Breed.php.html#10\">App\\Models\\Services\\Breed<\/a>"],[0,5,"<a href=\"Services\/Customer.php.html#12\">App\\Models\\Services\\Customer<\/a>"],[0,3,"<a href=\"Services\/MedicalConsultation.php.html#12\">App\\Models\\Services\\MedicalConsultation<\/a>"],[0,3,"<a href=\"Services\/Pet.php.html#11\">App\\Models\\Services\\Pet<\/a>"],[0,1,"<a href=\"Services\/Specie.php.html#9\">App\\Models\\Services\\Specie<\/a>"],[0,1,"<a href=\"Services\/Treatment.php.html#9\">App\\Models\\Services\\Treatment<\/a>"],[80,7,"<a href=\"User.php.html#21\">App\\Models\\User<\/a>"],[0,1,"<a href=\"Users\/Menu.php.html#8\">App\\Models\\Users\\Menu<\/a>"],[0,1,"<a href=\"Users\/Permission.php.html#8\">App\\Models\\Users\\Permission<\/a>"],[100,0,"<a href=\"Users\/Role.php.html#8\">App\\Models\\Users\\Role<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[0,1,"<a href=\"Sales\/Category.php.html#24\">App\\Models\\Sales\\Category::medicaments<\/a>"],[0,1,"<a href=\"Sales\/Inventory.php.html#26\">App\\Models\\Sales\\Inventory::warehouse<\/a>"],[0,1,"<a href=\"Sales\/Inventory.php.html#31\">App\\Models\\Sales\\Inventory::medicament<\/a>"],[0,1,"<a href=\"Sales\/Inventory.php.html#36\">App\\Models\\Sales\\Inventory::purchaseNoteDetail<\/a>"],[0,1,"<a href=\"Sales\/Medicament.php.html#29\">App\\Models\\Sales\\Medicament::purchaseNoteDetails<\/a>"],[0,1,"<a href=\"Sales\/Medicament.php.html#34\">App\\Models\\Sales\\Medicament::inventories<\/a>"],[0,1,"<a href=\"Sales\/Medicament.php.html#39\">App\\Models\\Sales\\Medicament::category<\/a>"],[0,1,"<a href=\"Sales\/Medicament.php.html#44\">App\\Models\\Sales\\Medicament::salesNoteDetails<\/a>"],[0,1,"<a href=\"Sales\/PurchaseNote.php.html#27\">App\\Models\\Sales\\PurchaseNote::warehouse<\/a>"],[0,1,"<a href=\"Sales\/PurchaseNote.php.html#32\">App\\Models\\Sales\\PurchaseNote::supplier<\/a>"],[0,1,"<a href=\"Sales\/PurchaseNote.php.html#37\">App\\Models\\Sales\\PurchaseNote::user<\/a>"],[0,1,"<a href=\"Sales\/PurchaseNote.php.html#42\">App\\Models\\Sales\\PurchaseNote::purchaseNoteDetails<\/a>"],[0,1,"<a href=\"Sales\/PurchaseNoteDetail.php.html#27\">App\\Models\\Sales\\PurchaseNoteDetail::purchaseNote<\/a>"],[0,1,"<a href=\"Sales\/PurchaseNoteDetail.php.html#32\">App\\Models\\Sales\\PurchaseNoteDetail::medicament<\/a>"],[0,1,"<a href=\"Sales\/PurchaseNoteDetail.php.html#37\">App\\Models\\Sales\\PurchaseNoteDetail::inventory<\/a>"],[0,1,"<a href=\"Sales\/SalesNote.php.html#29\">App\\Models\\Sales\\SalesNote::user<\/a>"],[0,1,"<a href=\"Sales\/SalesNote.php.html#34\">App\\Models\\Sales\\SalesNote::customer<\/a>"],[0,1,"<a href=\"Sales\/SalesNote.php.html#39\">App\\Models\\Sales\\SalesNote::warehouse<\/a>"],[0,1,"<a href=\"Sales\/SalesNote.php.html#44\">App\\Models\\Sales\\SalesNote::salesNoteDetails<\/a>"],[0,1,"<a href=\"Sales\/SalesNoteDetail.php.html#26\">App\\Models\\Sales\\SalesNoteDetail::salesNote<\/a>"],[0,1,"<a href=\"Sales\/SalesNoteDetail.php.html#31\">App\\Models\\Sales\\SalesNoteDetail::medicament<\/a>"],[0,1,"<a href=\"Sales\/StockMovement.php.html#15\">App\\Models\\Sales\\StockMovement::inventory<\/a>"],[0,1,"<a href=\"Sales\/StockMovement.php.html#20\">App\\Models\\Sales\\StockMovement::salesNoteDetail<\/a>"],[0,1,"<a href=\"Sales\/Supplier.php.html#26\">App\\Models\\Sales\\Supplier::purchaseNotes<\/a>"],[0,1,"<a href=\"Sales\/Warehouse.php.html#26\">App\\Models\\Sales\\Warehouse::purchaseNotes<\/a>"],[0,1,"<a href=\"Sales\/Warehouse.php.html#31\">App\\Models\\Sales\\Warehouse::inventories<\/a>"],[0,1,"<a href=\"Sales\/Warehouse.php.html#36\">App\\Models\\Sales\\Warehouse::saleNotes<\/a>"],[0,1,"<a href=\"Services\/Breed.php.html#19\">App\\Models\\Services\\Breed::specie<\/a>"],[0,1,"<a href=\"Services\/Breed.php.html#24\">App\\Models\\Services\\Breed::pets<\/a>"],[0,1,"<a href=\"Services\/Customer.php.html#25\">App\\Models\\Services\\Customer::getFullNameAttribute<\/a>"],[0,1,"<a href=\"Services\/Customer.php.html#29\">App\\Models\\Services\\Customer::getCreatedAtAttribute<\/a>"],[0,1,"<a href=\"Services\/Customer.php.html#34\">App\\Models\\Services\\Customer::getUpdatedAtAttribute<\/a>"],[0,1,"<a href=\"Services\/Customer.php.html#39\">App\\Models\\Services\\Customer::pets<\/a>"],[0,1,"<a href=\"Services\/Customer.php.html#43\">App\\Models\\Services\\Customer::saleNotes<\/a>"],[0,1,"<a href=\"Services\/MedicalConsultation.php.html#52\">App\\Models\\Services\\MedicalConsultation::pet<\/a>"],[0,1,"<a href=\"Services\/MedicalConsultation.php.html#60\">App\\Models\\Services\\MedicalConsultation::user<\/a>"],[0,1,"<a href=\"Services\/MedicalConsultation.php.html#68\">App\\Models\\Services\\MedicalConsultation::treatments<\/a>"],[0,1,"<a href=\"Services\/Pet.php.html#25\">App\\Models\\Services\\Pet::breed<\/a>"],[0,1,"<a href=\"Services\/Pet.php.html#35\">App\\Models\\Services\\Pet::owner<\/a>"],[0,1,"<a href=\"Services\/Pet.php.html#40\">App\\Models\\Services\\Pet::medicalConsultations<\/a>"],[0,1,"<a href=\"Services\/Specie.php.html#17\">App\\Models\\Services\\Specie::breeds<\/a>"],[0,1,"<a href=\"Services\/Treatment.php.html#27\">App\\Models\\Services\\Treatment::medicalConsultation<\/a>"],[100,1,"<a href=\"User.php.html#74\">App\\Models\\User::casts<\/a>"],[100,1,"<a href=\"User.php.html#82\">App\\Models\\User::fullName<\/a>"],[0,1,"<a href=\"User.php.html#89\">App\\Models\\User::medicalConsultations<\/a>"],[100,1,"<a href=\"User.php.html#94\">App\\Models\\User::getRoleAttribute<\/a>"],[0,1,"<a href=\"User.php.html#99\">App\\Models\\User::saleNotes<\/a>"],[100,1,"<a href=\"User.php.html#109\">App\\Models\\User::defaultProfilePhotoUrl<\/a>"],[0,1,"<a href=\"User.php.html#120\">App\\Models\\User::getFullNameAttribute<\/a>"],[0,1,"<a href=\"Users\/Menu.php.html#16\">App\\Models\\Users\\Menu::submenus<\/a>"],[0,1,"<a href=\"Users\/Permission.php.html#10\">App\\Models\\Users\\Permission::menu<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>
