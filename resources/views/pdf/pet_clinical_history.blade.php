@@ -126,7 +126,7 @@
 <body>
     <div class="header">
         <div class="header-left">
-            <h1>Clínica Veterinaria "VetCare"</h1>
+            <h1>Clínica Veterinaria "Fumican"</h1>
             <p>Av. Siempre Viva 742, Santa Cruz, Bolivia</p>
             <p>Tel: (+591) 3-333-3333 | Email: contacto@vetcare.com.bo</p>
         </div>

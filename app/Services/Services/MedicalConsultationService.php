@@ -11,11 +11,8 @@ class MedicalConsultationService
     public function getAllWithDetails()
     {
         $medicalConsultations = $this->repository->getAllWithDetails();
-        foreach ($medicalConsultations as $mc) {
-            $mc->pet_name = $mc->pet?->name ?? 'N/A';
-            $mc->pet_owner = $mc->pet?->owner ? ($mc->pet->owner->first_name . ' ' . $mc->pet->owner->last_name) : 'N/A';
-        }
-        return $medicalConsultations;
+        // Llamar al método privado para añadir detalles
+        return $this->addPetDetailsToConsultations($medicalConsultations);
     }
 
     public function create(array $data)
@@ -35,11 +32,28 @@ class MedicalConsultationService
 
     public function search(array $filters)
     {
-        return $this->repository->search($filters, true); // Paginated
+        $medicalConsultations = $this->repository->search($filters, true); // Paginated
+        // Llamar al método privado para añadir detalles
+        return $this->addPetDetailsToConsultations($medicalConsultations);
     }
 
     public function getFilteredResults(array $filters)
     {
-        return $this->repository->search($filters, false); // Not paginated
+        $consultations = $this->repository->search($filters, false); // Not paginated
+        // Asegurarse de que los resultados para el PDF también tengan los detalles
+        return $this->addPetDetailsToConsultations($consultations);
+    }
+
+    /**
+     * AÑADIDO: Método privado para centralizar la lógica de añadir detalles.
+     * Funciona tanto para colecciones paginadas como para colecciones normales.
+     */
+    private function addPetDetailsToConsultations($consultations)
+    {
+        foreach ($consultations as $mc) {
+            $mc->pet_name = $mc->pet?->name ?? 'N/A';
+            $mc->pet_owner = $mc->pet?->owner ? ($mc->pet->owner->first_name . ' ' . $mc->pet->owner->last_name) : 'N/A';
+        }
+        return $consultations;
     }
 }

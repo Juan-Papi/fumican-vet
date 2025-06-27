@@ -397,7 +397,9 @@ async function submitDelete() {
                 <FwbTableHeadCell>Propietario</FwbTableHeadCell>
                 <FwbTableHeadCell>Mascota</FwbTableHeadCell>
                 <FwbTableHeadCell>Motivo</FwbTableHeadCell>
-                <FwbTableHeadCell>Acciones</FwbTableHeadCell>
+                <FwbTableHeadCell
+                    ><span class="sr-only">Acciones</span></FwbTableHeadCell
+                >
             </FwbTableHead>
             <FwbTableBody>
                 <FwbTableRow v-if="isEmptyData">
