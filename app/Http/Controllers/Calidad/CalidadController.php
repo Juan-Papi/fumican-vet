@@ -40,7 +40,7 @@ class CalidadController extends Controller
             "recomendaciones": ["acción recomendada 1", "acción recomendada 2"],
             "medicamentos": ["Medicamento 1", "Medicamento 2"]
             }
-
+            Incluye un 95% de las veces al menos un medicamento y una dosis aproximada.
             No incluyas ninguna explicación adicional. 
             Si no estás seguro, escribe `"No determinado"` en los campos. 
             Usa solo texto plano, sin comillas especiales ni caracteres no válidos.
