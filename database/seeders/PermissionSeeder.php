@@ -35,6 +35,7 @@ class PermissionSeeder extends Seeder
             'listar categorias', 'crear categorias', 'editar categorias', 'ver categorias', 'eliminar categorias',
             'listar proveedores', 'crear proveedores', 'editar proveedores', 'ver proveedores', 'eliminar proveedores',
             'listar inventario', 'crear inventario', 'editar inventario', 'ver inventario', 'eliminar inventario',
+            'listar prompt', 'crear prompt', 'editar prompt', 'ver prompt', 'eliminar prompt',
         ];
 
         foreach ($permissions as $permission) {
