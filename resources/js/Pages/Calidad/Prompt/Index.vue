@@ -12,6 +12,11 @@ const prompt = ref("");
 const result = ref({});
 const loading = ref(false);
 
+const clearPrompt = () => {
+    prompt.value = "";
+    result.value = {};
+};
+
 const submitPrompt = async () => {
     loading.value = true;
     result.value = "";
@@ -59,7 +64,7 @@ const submitPrompt = async () => {
         </div>
         <div class="w-3/4 mx-auto mt-10 p-6 bg-white rounded shadow">
             <h2 class="text-2xl font-bold mb-4">
-                Diagnóstico Veterinario con Gemini
+                Diagnóstico Veterinario
             </h2>
             <form @submit.prevent="submitPrompt">
                 <label class="block mb-2 font-semibold"
@@ -78,7 +83,14 @@ const submitPrompt = async () => {
                     :disabled="loading"
                     @click="submitPrompt"
                 >
-                    {{ loading ? "Consultando..." : "Diagnosticar" }}
+                    {{ loading ? "Consultando..." : "Consultar" }}
+                </button>
+                <button
+                    type="button"
+                    class="ml-2 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                    @click="clearPrompt"
+                >
+                    Limpiar
                 </button>
             </form>
             <div
