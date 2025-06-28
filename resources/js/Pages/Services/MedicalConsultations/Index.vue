@@ -107,7 +107,7 @@ const form = ref({ ...defaultFormState });
 const formErrors = ref({});
 
 // --- PET SEARCH ---
-const search = useDebouncedRef("", 300);
+const search = useDebouncedRef("", 400); // 400ms debounce
 const isFetchingData = ref(false);
 const petsList = ref([]);
 
@@ -198,19 +198,23 @@ function closeAllModals() {
     selectedPet.value = null;
 }
 
+// CORRECCIÓN: Apuntar a la ruta de autocompletado de mascotas.
 watch(search, async (value) => {
-    if (value.length < 1) {
+    if (value.length < 2) {
+        // Buscar a partir de 2 caracteres
         petsList.value = [];
         return;
     }
     isFetchingData.value = true;
     try {
-        const response = await axios.get(route("pets.search"), {
+        // La ruta correcta es 'pets.autocomplete' que devuelve JSON
+        const response = await axios.get(route("pets.autocomplete"), {
             params: { search: value },
         });
         petsList.value = response.data;
     } catch (error) {
         console.error("Error searching pets:", error);
+        displayToast("danger", "No se pudieron cargar las mascotas.");
     } finally {
         isFetchingData.value = false;
     }
@@ -228,86 +232,66 @@ function handleSelectPet(pet) {
     formErrors.value.pet_id = null;
     isSearchPetModal.value = false;
     search.value = "";
+    petsList.value = [];
 }
 
+// MEJORA: Unificar la lógica de envío para evitar duplicar código.
 async function submitForm() {
-    if (modalMode.value === "create") {
-        await submitCreate();
-    } else {
-        await submitEdit();
-    }
-}
-
-async function submitCreate() {
     loading.value = true;
     formErrors.value = {};
+    const payload = prepareFormData(form.value);
+
+    const isEditing = modalMode.value === "edit";
+    const url = isEditing
+        ? route("medical-consultations.update", selectedConsultation.value.id)
+        : route("medical-consultations.store");
+    const method = isEditing ? "put" : "post";
+
     try {
-        const payload = prepareFormData(form.value);
-        await axios.post(route("medical-consultations.store"), payload);
-        displayToast("success", "Consulta creada correctamente.");
+        const response = await axios[method](url, payload);
+
+        // Usar el mensaje dinámico del backend para el toast
+        displayToast("success", response.data.message);
+
         closeAllModals();
         router.reload({ only: ["medicalConsultations"] });
     } catch (e) {
         if (e.response?.status === 422) {
             formErrors.value = e.response.data.errors;
-            displayToast(
-                "danger",
-                "Por favor, corrige los errores del formulario."
-            );
+            const errorMessage =
+                e.response.data.message || "Por favor, corrige los errores.";
+            displayToast("danger", errorMessage);
         } else {
-            displayToast("danger", "Error al crear la consulta.");
+            const defaultMessage = isEditing
+                ? "Error al actualizar la consulta."
+                : "Error al crear la consulta.";
+            displayToast("danger", e.response?.data?.message || defaultMessage);
         }
     } finally {
         loading.value = false;
     }
 }
 
-async function submitEdit() {
-    if (!selectedConsultation.value) return;
-    loading.value = true;
-    formErrors.value = {};
-    try {
-        const payload = prepareFormData(form.value);
-        await axios.put(
-            route(
-                "medical-consultations.update",
-                selectedConsultation.value.id
-            ),
-            payload
-        );
-        displayToast("success", "Consulta actualizada correctamente.");
-        closeAllModals();
-        router.reload({ only: ["medicalConsultations"] });
-    } catch (e) {
-        if (e.response?.status === 422) {
-            formErrors.value = e.response.data.errors;
-            displayToast(
-                "danger",
-                "Por favor, corrige los errores del formulario."
-            );
-        } else {
-            displayToast("danger", "Error al actualizar la consulta.");
-        }
-    } finally {
-        loading.value = false;
-    }
-}
-
+// MEJORA: Usar el mensaje dinámico del backend para el toast.
 async function submitDelete() {
     if (!selectedConsultation.value) return;
     loading.value = true;
     try {
-        await axios.delete(
+        const response = await axios.delete(
             route(
                 "medical-consultations.destroy",
                 selectedConsultation.value.id
             )
         );
-        displayToast("success", "Consulta eliminada correctamente.");
+
+        displayToast("success", response.data.message);
+
         closeAllModals();
         router.reload({ only: ["medicalConsultations"] });
     } catch (e) {
-        displayToast("danger", "Error al eliminar la consulta.");
+        const errorMessage =
+            e.response?.data?.message || "Error al eliminar la consulta.";
+        displayToast("danger", errorMessage);
     } finally {
         loading.value = false;
     }
@@ -316,14 +300,12 @@ async function submitDelete() {
 
 <template>
     <AdminLayout title="Consultas Médicas">
-        <!-- Toast Notification -->
         <div class="fixed top-4 right-4 z-50">
             <FwbToast v-if="showToast" :type="toastType" closable>{{
                 toastMsg
             }}</FwbToast>
         </div>
 
-        <!-- Header & Report Buttons -->
         <div class="flex justify-between my-6 items-center">
             <h2 class="text-2xl font-semibold">Consultas Médicas</h2>
             <div class="flex items-center space-x-2">
@@ -345,10 +327,9 @@ async function submitDelete() {
             </div>
         </div>
 
-        <!-- Filters Bar -->
         <form
             @submit.prevent="applyFilters"
-            class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-100 rounded-lg"
+            class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6 p-4 bg-gray-100 rounded-lg"
         >
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700"
@@ -389,7 +370,6 @@ async function submitDelete() {
             </div>
         </form>
 
-        <!-- Consultations Table -->
         <FwbTable>
             <FwbTableHead>
                 <FwbTableHeadCell>ID</FwbTableHeadCell>
@@ -451,7 +431,7 @@ async function submitDelete() {
                         </button>
                         <button
                             @click.prevent="openDeleteModal(consultation)"
-                            class="text-gray-500 hover:text-gray-700"
+                            class="text-red-500 hover:text-red-700"
                             title="Eliminar"
                         >
                             <i class="fa-solid fa-trash fa-lg"></i>
@@ -461,7 +441,6 @@ async function submitDelete() {
             </FwbTableBody>
         </FwbTable>
 
-        <!-- Pagination -->
         <div v-if="!isEmptyData" class="flex justify-center my-4">
             <FwbPagination
                 v-model="currentPage"
@@ -471,7 +450,6 @@ async function submitDelete() {
             />
         </div>
 
-        <!-- Create/Edit Modal -->
         <FwbModal size="5xl" v-if="isCreateOrEditModal" @close="closeAllModals">
             <template #header>
                 <h3 class="text-xl font-semibold">
@@ -819,7 +797,9 @@ async function submitDelete() {
                             />
                         </div>
                         <div>
-                            <InputLabel value="Costo Consulta ($)" /><TextInput
+                            <InputLabel
+                                value="Costo Consulta (Bs.)"
+                            /><TextInput
                                 v-model="form.consultation_fee"
                                 type="number"
                                 step="0.01"
@@ -847,7 +827,6 @@ async function submitDelete() {
             </template>
         </FwbModal>
 
-        <!-- View Modal -->
         <FwbModal
             size="4xl"
             v-if="isViewModal && selectedConsultation"
@@ -855,7 +834,9 @@ async function submitDelete() {
         >
             <template #header
                 ><h3 class="text-xl font-semibold">
-                    Detalles de la Consulta Médica
+                    Detalles de la Consulta Médica #{{
+                        selectedConsultation.id
+                    }}
                 </h3></template
             >
             <template #body>
@@ -1047,7 +1028,7 @@ async function submitDelete() {
                                 >
                                 {{
                                     selectedConsultation.consultation_fee
-                                        ? `$${selectedConsultation.consultation_fee}`
+                                        ? `Bs. ${selectedConsultation.consultation_fee}`
                                         : "N/A"
                                 }}
                             </p>
@@ -1064,7 +1045,6 @@ async function submitDelete() {
             </template>
         </FwbModal>
 
-        <!-- Pet Search Modal -->
         <SearchModal
             v-if="isSearchPetModal"
             @close="isSearchPetModal = false"
@@ -1092,13 +1072,14 @@ async function submitDelete() {
             </template>
         </SearchModal>
 
-        <!-- Delete Modal -->
         <FwbModal v-if="isDeleteModal" @close="closeAllModals">
             <template #header>Confirmar Eliminación</template>
             <template #body>
                 <p class="text-center text-lg">
-                    ¿Estás seguro de que deseas eliminar la consulta para la
-                    mascota <strong>{{ selectedConsultation?.pet_name }}</strong
+                    ¿Estás seguro de que deseas eliminar la consulta #{{
+                        selectedConsultation?.id
+                    }}
+                    para <strong>{{ selectedConsultation?.pet_name }}</strong
                     >?
                 </p>
                 <p class="text-sm text-gray-600 mt-2 text-center">

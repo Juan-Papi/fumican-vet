@@ -24,21 +24,27 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function search(Request $request)
+    /**
+     * CORREGIDO: Este método ahora SÓLO filtra la tabla principal de clientes.
+     */
+    public function search(Request $request): InertiaResponse
     {
         $filters = $request->only('search_term');
-
-        // Si la petición es para autocompletar, devuelve JSON
-        if ($request->has('autocomplete')) {
-            $customers = $this->customerService->autocompleteSearch($request->search_term);
-            return response()->json($customers);
-        }
-
-        // Si no, es para filtrar la tabla, devuelve la vista
         return Inertia::render('Services/Customers/Index', [
             'customers' => $this->customerService->search($filters),
             'filters' => $filters,
         ]);
+    }
+
+    /**
+     * NUEVO: Este método SÓLO se encarga de las peticiones de autocompletado.
+     * Devuelve una respuesta JSON simple y rápida.
+     */
+    public function autocomplete(Request $request): JsonResponse
+    {
+        $term = $request->input('search', '');
+        $customers = $this->customerService->autocompleteSearch($term);
+        return response()->json($customers);
     }
 
     public function store(StoreCustomerRequest $request): JsonResponse
