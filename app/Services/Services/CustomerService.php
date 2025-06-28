@@ -28,8 +28,27 @@ class CustomerService
         return $this->customerRepository->update($userData, $id);
     }
 
-    public function search()
+    public function delete($id)
     {
-        return $this->customerRepository->search();
+        return $this->customerRepository->delete($id);
+    }
+
+    /**
+     * CORREGIDO: Método de búsqueda para la tabla principal (paginado).
+     */
+    public function search(array $filters)
+    {
+        return $this->customerRepository->search($filters, true);
+    }
+
+    /**
+     * CORREGIDO: Método para el autocompletado (no paginado).
+     */
+    public function autocompleteSearch(?string $term)
+    {
+        if (empty($term)) {
+            return [];
+        }
+        return $this->customerRepository->search(['search_term' => $term], false);
     }
 }

@@ -30,15 +30,31 @@ class PetService
 
     public function delete($id)
     {
-        // return $this->repository->delete($id);
+        return $this->repository->delete($id);
     }
 
-    public function search($search)
+    /**
+     * CORREGIDO: Este método ahora maneja los filtros de la tabla principal y espera un array.
+     */
+    public function search(array $filters)
     {
-        $pets = $this->repository->search($search);
+        return $this->repository->searchWithFilters($filters);
+    }
+
+    /**
+     * AÑADIDO: El método que te faltaba para el autocompletado en los modales.
+     */
+    public function autocompleteSearch(?string $term)
+    {
+        if (empty($term)) {
+            return [];
+        }
+
+        $pets = $this->repository->autocompleteSearch($term);
+        // Añade los atributos compuestos que el frontend espera
         foreach ($pets as $pet) {
-            $pet->owner_full_name = $pet->owner->first_name . ' ' . $pet->owner->last_name;
-            $pet->specie_and_breed = $pet->breed->specie->name . ' - ' . $pet->breed->name;
+            $pet->owner_full_name = $pet->owner?->first_name . ' ' . $pet->owner?->last_name;
+            $pet->specie_and_breed = $pet->breed?->specie?->name . ' - ' . $pet->breed?->name;
         }
         return $pets;
     }

@@ -14,7 +14,7 @@ use App\Http\Controllers\Sales\WarehouseController;
 use App\Http\Controllers\Sales\PurchaseNoteController;
 use App\Http\Controllers\Sales\SalesNoteController;
 use App\Http\Controllers\Calidad\CalidadController;
-use App\Models\Sales\Category;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -33,18 +33,37 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::group(['prefix' => 'users'], function () {
-        Route::resource('/users', UserController::class);
+        Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('search', [UserController::class, 'search'])->name('search');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::put('{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
+        });
         Route::resource('/roles', RoleController::class);
     });
     Route::group(['prefix' => 'services'], function () {
-        Route::get('/customers-search', [CustomerController::class, 'search'])->name('customers.search');
-        Route::resource('/customers', CustomerController::class);
 
-        Route::resource('/medical-consultations', MedicalConsultationController::class);
+        Route::group(['prefix' => 'customers', 'as' => 'customers.'], function () {
+            Route::get('/', [CustomerController::class, 'index'])->name('index');
+            Route::get('search', [CustomerController::class, 'search'])->name('search'); // Para filtrar la lista y para autocomplete
+            Route::post('/', [CustomerController::class, 'store'])->name('store');
+            Route::put('{customer}', [CustomerController::class, 'update'])->name('update');
+            Route::delete('{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::group(['prefix' => 'medical-consultations', 'as' => 'medical-consultations.'], function () {
+            Route::get('/', [MedicalConsultationController::class, 'index'])->name('index');
+            Route::post('/', [MedicalConsultationController::class, 'store'])->name('store');
+            Route::put('{id}', [MedicalConsultationController::class, 'update'])->name('update');
+            Route::delete('{id}', [MedicalConsultationController::class, 'destroy'])->name('destroy');
+            Route::get('search', [MedicalConsultationController::class, 'search'])->name('search');
+            Route::get('report', [MedicalConsultationController::class, 'generateConsultationsReport'])->name('report');
+            Route::get('pets/{pet}/history-report', [MedicalConsultationController::class, 'generatePetHistoryReport'])->name('pet-history-report');
+        });
 
         Route::get('/species-search', [SpecieController::class, 'search'])->name('species.search');
         Route::resource('/species', SpecieController::class);
@@ -52,9 +71,17 @@ Route::middleware([
         Route::get('/breeds-search', [BreedController::class, 'search'])->name('breeds.search');
         Route::resource('/breeds', BreedController::class);
 
-        Route::post('/pets-prepare-store-data', [PetController::class, 'prepareStoreData'])->name('pets.prepareStoreData');
-        Route::get('/pets-search', [PetController::class, 'search'])->name('pets.search');
-        Route::resource('/pets', PetController::class);
+        Route::group(['prefix' => 'pets', 'as' => 'pets.'], function () {
+            Route::get('/', [PetController::class, 'index'])->name('index');
+            Route::get('search', [PetController::class, 'search'])->name('search'); // Para filtrar la lista principal
+            Route::post('/', [PetController::class, 'store'])->name('store');
+            Route::put('{pet}', [PetController::class, 'update'])->name('update');
+            Route::delete('{pet}', [PetController::class, 'destroy'])->name('destroy');
+
+            // Rutas auxiliares para la lógica del formulario en el modal
+            Route::get('autocomplete', [PetController::class, 'autocomplete'])->name('autocomplete'); // Búsqueda para otras partes del sistema
+            Route::post('prepare-data', [PetController::class, 'prepareStoreData'])->name('prepare-data');
+        });
     });
 
     Route::group(['prefix' => 'sales'], function () {
@@ -134,7 +161,7 @@ Route::middleware([
             Route::delete('{id}', [SalesNoteController::class, 'destroy'])->name('sales-note.destroy');
         });
 
-       
+
     });
      // CALIDAD
     Route::get('/calidad/prompt', [CalidadController::class, 'index'])->name('calidad.prompt.index');

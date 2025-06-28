@@ -5,80 +5,86 @@ namespace App\Http\Controllers\Services;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Services\StoreMedicalConsultationRequest;
 use App\Http\Requests\Services\UpdateMedicalConsultationRequest;
+use App\Models\Services\Pet;
 use App\Services\Services\MedicalConsultationService;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
+use Illuminate\Http\Request;
+use PDF;
 
 class MedicalConsultationController extends Controller
 {
     public function __construct(protected MedicalConsultationService $mcService) {}
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): InertiaResponse
     {
-        $medicalConsultations = $this->mcService->getAll();
+        $medicalConsultations = $this->mcService->getAllWithDetails();
         return Inertia::render('Services/MedicalConsultations/Index', [
-            'medicalConsultations' => $medicalConsultations
+            'medicalConsultations' => $medicalConsultations,
+            'filters' => [], // Pasar filtros vacíos en la carga inicial
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function search(Request $request): InertiaResponse
     {
-        return Inertia::render('Services/MedicalConsultations/Form', [
-            'formAction' => 'create'
+        $filters = $request->only('search_term', 'date_from', 'date_to');
+        $medicalConsultations = $this->mcService->search($filters);
+
+        return Inertia::render('Services/MedicalConsultations/Index', [
+            'medicalConsultations' => $medicalConsultations,
+            'filters' => $filters, // Devolver los filtros a la vista
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreMedicalConsultationRequest $request)
+    public function store(StoreMedicalConsultationRequest $request): JsonResponse
     {
-        $this->mcService->create($request->validated());
-        return redirect()->route('medical-consultations.index');
+        $consultation = $this->mcService->create($request->validated());
+        return response()->json([
+            'message' => 'Consulta creada correctamente.',
+            'consultation' => $consultation,
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(UpdateMedicalConsultationRequest $request, string $id): JsonResponse
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $medCons = $this->mcService->getById($id);
-        $medCons->load('pet:id,name,customer_id,breed_id', 'pet.owner:id,first_name,last_name,ci', 'pet.breed.specie');
-        return Inertia::render('Services/MedicalConsultations/Form', [
-            'formAction' => 'edit',
-            'medicalConsultation' => $medCons
+        $this->mcService->update($request->validated(), $id);
+        return response()->json([
+            'message' => 'Consulta actualizada correctamente.'
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateMedicalConsultationRequest $request, string $id)
+    public function destroy(string $id): JsonResponse
     {
-        $data = $request->validated();
-        $this->mcService->update($data, $id);
-        return redirect()->route('medical-consultations.index');
+        $this->mcService->delete($id);
+        return response()->json([
+            'message' => 'Consulta eliminada correctamente.'
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function generateConsultationsReport(Request $request)
     {
-        //
+        $filters = $request->only('search_term', 'date_from', 'date_to');
+        $consultations = $this->mcService->getFilteredResults($filters); // Método sin paginación
+
+        $pdf = Pdf::loadView('pdf.consultations_report', compact('consultations', 'filters'));
+        return $pdf->stream('reporte_consultas_' . now()->format('Ymd') . '.pdf');
+    }
+
+    // AÑADIDO: Generar historial clínico por mascota
+    public function generatePetHistoryReport(Pet $pet)
+    {
+        // Cargar las relaciones necesarias para el historial
+        $pet->load([
+            // CORREGIDO: Se cambió 'phone' por 'phone_number' y se eliminó 'address'.
+            'owner:id,first_name,last_name,ci,phone_number',
+            'breed.specie',
+            'medicalConsultations' => function ($query) {
+                $query->orderBy('created_at', 'desc')->with('user:id,first_name,last_name');
+            }
+        ]);
+
+        $pdf = Pdf::loadView('pdf.pet_clinical_history', compact('pet'));
+        return $pdf->setPaper('a4', 'portrait')->stream('historial_clinico_' . $pet->name . '.pdf');
     }
 }

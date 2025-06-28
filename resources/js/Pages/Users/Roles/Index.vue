@@ -1,13 +1,8 @@
 <script setup>
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import TextInput from "@/Components/TextInput.vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import { usePage, router } from "@inertiajs/vue3";
 import {
     FwbButton,
-    FwbListGroup,
-    FwbListGroupItem,
-    FwbModal,
     FwbPagination,
     FwbTable,
     FwbTableBody,
@@ -15,292 +10,444 @@ import {
     FwbTableHead,
     FwbTableHeadCell,
     FwbTableRow,
+    FwbModal,
+    FwbToast,
     FwbToggle,
 } from "flowbite-vue";
 import { computed, ref, watch } from "vue";
-import { router, usePage } from "@inertiajs/vue3";
+import axios from "axios";
 import RoleEnum from "@/Utils/Enums/RoleEnum";
-import PermissionEnum from "@/Utils/Enums/PermissionEnum";
 
-const props = defineProps({ roles: Object, permissions: Array });
+// Components
+import InputError from "@/Components/InputError.vue";
+import InputLabel from "@/Components/InputLabel.vue";
+import TextInput from "@/Components/TextInput.vue";
+
+// --- PROPS & FILTERS ---
+const props = defineProps({
+    roles: Object,
+    permissions: Array,
+    filters: Object,
+});
+
+const filters = ref({ search_term: props.filters?.search_term || "" });
+function applyFilters() {
+    router.get(route("roles.search"), filters.value, {
+        preserveState: true,
+        replace: true,
+    });
+}
+function resetFilters() {
+    filters.value = { search_term: "" };
+    router.get(route("roles.index"));
+}
+
+// --- PAGINATION ---
 const currentPage = ref(props.roles.current_page || 1);
-
 watch(currentPage, (newPage) => {
     router.get(
-        route("customers.index"),
-        { with_permissions: 1, page: newPage },
-        { preserveState: true }
+        route("roles.search"),
+        { ...filters.value, page: newPage },
+        { preserveState: true, replace: true }
     );
 });
 
-const isShowModal = ref(false);
-const modalAction = ref(null);
-const showModal = (show = true) => {
-    isShowModal.value = show;
-};
+// --- STATE MANAGEMENT ---
+const loading = ref(false);
+const showToast = ref(false);
+const toastMsg = ref("");
+const toastType = ref("success");
 
+// --- MODALS ---
+const modalMode = ref("create");
+const isCreateOrEditModal = ref(false);
+const isViewModal = ref(false);
 const selectedRole = ref(null);
-const setAction = (action, role) => {
-    modalAction.value = action;
-    if (action === "create") {
-        selectedRole.value = { name: "", permissions: [] };
-        rolePermissions.value.forEach((permission) => {
-            permission.checked = false;
-        });
-        showModal();
-        return;
-    }
-    selectedRole.value = role;
-    rolePermissions.value.forEach((permission) => {
-        permission.checked = role.permissions.some(
-            (rolePermission) => rolePermission.id === permission.id
-        );
-    });
-    showModal();
-};
-const rolePermissions = ref(props.permissions);
-const isShowingRole = computed(() => modalAction.value === "show");
-const isEditingRole = computed(() => modalAction.value === "edit");
-const isCreatingRole = computed(() => modalAction.value === "create");
+
+// --- FORM ---
+const defaultFormState = { id: null, name: "", permissions: [] };
+const form = ref({ ...defaultFormState });
+const formErrors = ref({});
+const allPermissions = ref([]);
+
+// --- HELPERS & PERMISSIONS ---
+const page = usePage();
+const canCreateRoles = true;
+const canEditRoles = true;
+const canViewRoles = true;
 const esGerentePropietario = computed(
     () => selectedRole.value?.name === RoleEnum.GERENTE_PROPIETARIO
 );
 
-const isSaving = ref(false);
-const save = async () => {
-    isSaving.value = true;
-    try {
-        if (isCreatingRole.value) {
-            await router.post(route("roles.store"), {
-                name: selectedRole.value.name,
-                permissions: rolePermissions.value
-                    .filter((p) => p.checked)
-                    .map((p) => p.id),
-            });
-        } else if (isEditingRole.value) {
-            await router.put(route("roles.update", selectedRole.value.id), {
-                name: selectedRole.value.name,
-                permissions: rolePermissions.value
-                    .filter((p) => p.checked)
-                    .map((p) => p.id),
-            });
-        }
-        showModal(false);
-    } catch (error) {
-        console.error(error);
-    } finally {
-        isSaving.value = false;
-    }
-};
+// --- FUNCTIONS ---
+function displayToast(type, message) {
+    toastType.value = type;
+    toastMsg.value = message;
+    showToast.value = true;
+    setTimeout(() => (showToast.value = false), 3000);
+}
 
-// PERMISSIONS
-const page = usePage(); // Debe ser importado
-const canCreateRoles = page.props.auth.user_permissions.some(
-    (permission) => permission.name === PermissionEnum.CREAR_ROLES
-);
-const canEditRoles = page.props.auth.user_permissions.some(
-    (permission) => permission.name === PermissionEnum.EDITAR_ROLES
-);
-const canViewRoles = page.props.auth.user_permissions.some(
-    (permission) => permission.name === PermissionEnum.VER_ROLES
-);
+function setupPermissions(rolePermissions = []) {
+    allPermissions.value = props.permissions.map((p) => ({
+        ...p,
+        checked: rolePermissions.some((rp) => rp.id === p.id),
+    }));
+}
+
+function openCreateModal() {
+    modalMode.value = "create";
+    selectedRole.value = null; // Ensure selectedRole is clean for computed properties
+    form.value = { ...defaultFormState };
+    setupPermissions();
+    formErrors.value = {};
+    isCreateOrEditModal.value = true;
+}
+
+function openEditModal(role) {
+    modalMode.value = "edit";
+    selectedRole.value = role;
+    form.value = { ...defaultFormState, ...role };
+    setupPermissions(role.permissions);
+    formErrors.value = {};
+    isCreateOrEditModal.value = true;
+}
+
+function openViewModal(role) {
+    modalMode.value = "view";
+    selectedRole.value = role;
+    setupPermissions(role.permissions);
+    isViewModal.value = true;
+}
+
+function closeAllModals() {
+    isCreateOrEditModal.value = false;
+    isViewModal.value = false;
+    selectedRole.value = null; // <-- CORREGIDO: Reinicia el rol seleccionado al cerrar.
+}
+
+// --- CRUD ---
+async function submitForm() {
+    loading.value = true;
+    formErrors.value = {};
+
+    const payload = {
+        name: form.value.name,
+        permissions: allPermissions.value
+            .filter((p) => p.checked)
+            .map((p) => p.id),
+    };
+
+    try {
+        if (modalMode.value === "edit") {
+            await axios.put(
+                route("roles.update", selectedRole.value.id),
+                payload
+            );
+            displayToast("success", "Rol actualizado correctamente.");
+        } else {
+            await axios.post(route("roles.store"), payload);
+            displayToast("success", "Rol registrado correctamente.");
+        }
+        closeAllModals();
+        router.reload({ only: ["roles"] });
+    } catch (e) {
+        if (e.response?.status === 422) {
+            formErrors.value = e.response.data.errors;
+            displayToast("danger", "Por favor, corrige los errores.");
+        } else {
+            displayToast(
+                "danger",
+                e.response?.data?.message || "Ocurrió un error inesperado."
+            );
+        }
+    } finally {
+        loading.value = false;
+    }
+}
 </script>
 
 <template>
-    <AdminLayout title="Roles">
-        <div class="flex justify-between my-6">
-            <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
-                Roles
+    <AdminLayout title="Roles y Permisos">
+        <!-- Toast Notification -->
+        <div class="fixed top-4 right-4 z-50">
+            <FwbToast v-if="showToast" :type="toastType" closable>{{
+                toastMsg
+            }}</FwbToast>
+        </div>
+
+        <!-- Header & Actions -->
+        <div class="flex justify-between my-6 items-center">
+            <h2 class="text-2xl font-semibold themed-text-base">
+                Roles y Permisos
             </h2>
             <FwbButton
                 v-if="canCreateRoles"
-                @click="setAction('create')"
-                type="button"
+                @click="openCreateModal"
                 color="purple"
+                ><i class="fa-solid fa-plus mr-2"></i>Agregar Rol</FwbButton
             >
-                Agregar Role
-            </FwbButton>
         </div>
-        <div>
-            <FwbTable>
-                <FwbTableHead class="th">
-                    <FwbTableHeadCell>Nombre</FwbTableHeadCell>
-                    <FwbTableHeadCell>Fecha de creación</FwbTableHeadCell>
-                    <FwbTableHeadCell>Última modificación</FwbTableHeadCell>
-                    <FwbTableHeadCell>
-                        <span class="sr-only">Edit</span>
-                    </FwbTableHeadCell>
-                </FwbTableHead>
-                <FwbTableBody>
-                    <FwbTableRow v-for="role in roles.data" :key="role.id">
-                        <FwbTableCell>{{ role.name }}</FwbTableCell>
-                        <FwbTableCell>{{ role.created_at }}</FwbTableCell>
-                        <FwbTableCell>{{ role.updated_at }}</FwbTableCell>
-                        <FwbTableCell class="flex justify-end gap-x-4">
-                            <FwbButton
-                                v-if="canViewRoles"
-                                @click="setAction('show', role)"
-                                color="alternative"
-                                square
-                            >
-                                <i class="fa-solid fa-eye lg:mr-2" />
-                                <span class="hidden lg:inline">Ver</span>
-                            </FwbButton>
-                            <FwbButton
-                                v-if="canEditRoles"
-                                @click="setAction('edit', role)"
-                                color="alternative"
-                                square
-                            >
-                                <i class="fa-solid fa-pencil lg:mr-2" />
-                                <span class="hidden lg:inline">Editar</span>
-                            </FwbButton>
-                        </FwbTableCell>
-                    </FwbTableRow>
-                </FwbTableBody>
-            </FwbTable>
 
-            <div class="flex justify-center my-4">
-                <FwbPagination
-                    v-model="currentPage"
-                    :total-items="roles.total"
-                    :per-page="roles.per_page"
-                    large
-                ></FwbPagination>
+        <!-- Filters -->
+        <form
+            @submit.prevent="applyFilters"
+            class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 themed-bg-secondary-light rounded-lg"
+        >
+            <div class="md:col-span-3">
+                <label class="block text-sm font-medium themed-text-muted"
+                    >Buscar por Nombre de Rol</label
+                >
+                <TextInput
+                    v-model="filters.search_term"
+                    type="text"
+                    class="mt-1 block w-full themed-input"
+                    placeholder="Escriba un nombre..."
+                />
             </div>
-        </div>
-    </AdminLayout>
-
-    <FwbModal v-if="isShowModal && !isCreatingRole" @close="showModal(false)">
-        <template #header>
-            <div class="flex items-center text-lg">
-                Rol {{ selectedRole.name }}
+            <div class="flex items-end space-x-2">
+                <FwbButton color="purple" type="submit">Filtrar</FwbButton>
+                <FwbButton color="alternative" @click.prevent="resetFilters"
+                    >Limpiar</FwbButton
+                >
             </div>
-        </template>
-        <template #body>
-            <div
-                class="flex flex-col px-2 gap-2 h-72 md:h-[34rem] overflow-auto"
-            >
-                <div class="text-sm">
-                    <span class="font-medium mr-2">Creado en: </span>
-                    <span
-                        class="leading-relaxed text-gray-500 dark:text-gray-400"
-                    >
-                        {{ selectedRole.created_at }}
-                    </span>
-                </div>
-                <div class="text-sm">
-                    <span class="font-medium mr-2">Última modificación: </span>
-                    <span
-                        class="leading-relaxed text-gray-500 dark:text-gray-400"
-                    >
-                        {{ selectedRole.updated_at }}
-                    </span>
-                </div>
+        </form>
 
-                <div class="">
-                    <InputLabel for="name" value="Nombre" />
-                    <TextInput
-                        id="name"
-                        v-model="selectedRole.name"
-                        class="mt-1 block w-full"
-                        required
-                        autocomplete="off"
-                    />
-                    <InputError
-                        class="mt-2"
-                        :message="selectedRole.errors?.name"
-                    />
-                </div>
-
-                <hr />
-
-                <div>
-                    <span class="font-medium mr-2">Permisos </span>
-                    <FwbListGroup class="w-full">
-                        <FwbListGroupItem
-                            v-for="permission in rolePermissions"
-                            class="w-full flex justify-between"
-                            hover
+        <!-- Roles Table -->
+        <FwbTable class="themed-table">
+            <FwbTableHead>
+                <FwbTableHeadCell class="themed-table-header"
+                    >Nombre del Rol</FwbTableHeadCell
+                >
+                <FwbTableHeadCell class="themed-table-header"
+                    >Fecha de Creación</FwbTableHeadCell
+                >
+                <FwbTableHeadCell class="themed-table-header"
+                    >Última Modificación</FwbTableHeadCell
+                >
+                <FwbTableHeadCell class="themed-table-header"
+                    ><span class="sr-only">Acciones</span></FwbTableHeadCell
+                >
+            </FwbTableHead>
+            <FwbTableBody class="themed-table-body">
+                <FwbTableRow v-if="!roles.data.length"
+                    ><FwbTableCell
+                        colspan="4"
+                        class="text-center py-4 themed-text-muted"
+                        >No se encontraron roles.</FwbTableCell
+                    ></FwbTableRow
+                >
+                <FwbTableRow
+                    v-for="role in roles.data"
+                    :key="role.id"
+                    class="themed-table-row"
+                >
+                    <FwbTableCell class="themed-text-base">{{
+                        role.name
+                    }}</FwbTableCell>
+                    <FwbTableCell class="themed-text-muted">{{
+                        role.created_at
+                    }}</FwbTableCell>
+                    <FwbTableCell class="themed-text-muted">{{
+                        role.updated_at
+                    }}</FwbTableCell>
+                    <FwbTableCell class="space-x-4 whitespace-nowrap">
+                        <button
+                            @click="openViewModal(role)"
+                            class="themed-action-button-view"
+                            title="Ver Permisos"
                         >
-                            <span>{{ permission.name }}</span>
-                            <div>
+                            <i class="fa-solid fa-eye fa-lg"></i>
+                        </button>
+                        <button
+                            v-if="canEditRoles"
+                            @click="openEditModal(role)"
+                            class="themed-action-button-edit"
+                            title="Editar Rol"
+                        >
+                            <i class="fa-solid fa-pencil fa-lg"></i>
+                        </button>
+                    </FwbTableCell>
+                </FwbTableRow>
+            </FwbTableBody>
+        </FwbTable>
+        <div v-if="roles.data.length" class="flex justify-center my-4">
+            <FwbPagination
+                v-model="currentPage"
+                :total-items="roles.total"
+                :per-page="roles.per_page"
+                large
+            />
+        </div>
+
+        <!-- View/Edit/Create Modal -->
+        <FwbModal
+            size="2xl"
+            v-if="isCreateOrEditModal || isViewModal"
+            @close="closeAllModals"
+        >
+            <template #header>
+                <h3
+                    class="text-xl font-semibold themed-text-base"
+                    v-if="modalMode === 'create'"
+                >
+                    Crear Nuevo Rol
+                </h3>
+                <h3
+                    class="text-xl font-semibold themed-text-base"
+                    v-if="modalMode === 'edit'"
+                >
+                    Editar Rol: {{ selectedRole.name }}
+                </h3>
+                <h3
+                    class="text-xl font-semibold themed-text-base"
+                    v-if="modalMode === 'view'"
+                >
+                    Permisos del Rol: {{ selectedRole.name }}
+                </h3>
+            </template>
+            <template #body>
+                <form class="space-y-4 p-2" @submit.prevent="submitForm">
+                    <div>
+                        <InputLabel value="Nombre del Rol" />
+                        <TextInput
+                            v-model="form.name"
+                            class="mt-1 w-full themed-input"
+                            :disabled="
+                                modalMode === 'view' || esGerentePropietario
+                            "
+                        />
+                        <InputError :message="formErrors.name?.[0]" />
+                    </div>
+                    <hr class="themed-border" />
+                    <div>
+                        <h4 class="font-semibold themed-text-base mb-2">
+                            Permisos
+                        </h4>
+                        <div class="h-80 overflow-y-auto space-y-2 pr-2">
+                            <div
+                                v-for="permission in allPermissions"
+                                :key="permission.id"
+                                class="flex items-center justify-between p-2 rounded-md themed-bg-secondary-light"
+                            >
+                                <span class="themed-text-muted">{{
+                                    permission.name
+                                }}</span>
                                 <FwbToggle
                                     v-model="permission.checked"
                                     :disabled="
-                                        isShowingRole || esGerentePropietario
+                                        modalMode === 'view' ||
+                                        esGerentePropietario
                                     "
                                 />
                             </div>
-                        </FwbListGroupItem>
-                    </FwbListGroup>
+                        </div>
+                        <InputError :message="formErrors.permissions?.[0]" />
+                    </div>
+                </form>
+            </template>
+            <template #footer>
+                <div class="flex justify-end w-full">
+                    <FwbButton @click="closeAllModals" color="alternative"
+                        >Cerrar</FwbButton
+                    >
+                    <FwbButton
+                        v-if="modalMode !== 'view'"
+                        @click="submitForm"
+                        color="purple"
+                        :loading="loading"
+                        class="ml-2"
+                        >Guardar</FwbButton
+                    >
                 </div>
-            </div>
-        </template>
-        <template #footer>
-            <div class="flex justify-between">
-                <FwbButton @click="showModal(false)" color="alternative">
-                    Volver
-                </FwbButton>
-                <FwbButton v-if="isEditingRole" @click="save" color="dark">
-                    Guardar
-                </FwbButton>
-            </div>
-        </template>
-    </FwbModal>
-
-    <FwbModal v-if="isShowModal && isCreatingRole" @close="showModal(false)">
-        <template #header>
-            <div class="flex items-center text-lg">Crear nuevo rol</div>
-        </template>
-        <template #body>
-            <div
-                class="flex flex-col px-2 gap-2 h-72 md:h-[34rem] overflow-auto"
-            >
-                <div class="">
-                    <InputLabel for="name" value="Nombre" />
-                    <TextInput
-                        id="name"
-                        v-model="selectedRole.name"
-                        class="mt-1 block w-full"
-                        required
-                        autocomplete="off"
-                    />
-                    <InputError
-                        class="mt-2"
-                        :message="selectedRole.errors?.name"
-                    />
-                </div>
-
-                <hr class="mt-2" />
-
-                <div>
-                    <span class="font-medium mr-2">Permisos </span>
-                    <FwbListGroup class="w-full mt-2">
-                        <FwbListGroupItem
-                            v-for="permission in rolePermissions"
-                            class="w-full flex justify-between"
-                            hover
-                        >
-                            <span>{{ permission.name }}</span>
-                            <div>
-                                <FwbToggle
-                                    v-model="permission.checked"
-                                    :disabled="isShowingRole"
-                                />
-                            </div>
-                        </FwbListGroupItem>
-                    </FwbListGroup>
-                </div>
-            </div>
-        </template>
-        <template #footer>
-            <div class="flex justify-between">
-                <FwbButton @click="showModal(false)" color="alternative">
-                    Volver
-                </FwbButton>
-                <FwbButton @click="save" color="dark"> Guardar </FwbButton>
-            </div>
-        </template>
-    </FwbModal>
+            </template>
+        </FwbModal>
+    </AdminLayout>
 </template>
+
+<style scoped>
+/* Estilos que usan las variables de tema */
+.themed-text-base {
+    color: var(--color-text-base);
+}
+.themed-text-muted {
+    color: var(--color-text-muted);
+}
+.themed-bg-secondary-light {
+    background-color: var(--color-background-secondary);
+}
+.themed-border {
+    border-color: var(--color-border);
+}
+
+.themed-input {
+    background-color: var(--color-background-secondary);
+    color: var(--color-text-base);
+    border: 1px solid var(--color-border);
+}
+.themed-input:focus {
+    --tw-ring-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.themed-table-header {
+    background-color: var(--color-background);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.themed-table-body {
+    background-color: var(--color-background-secondary);
+}
+
+.themed-table-row {
+    border-bottom: 1px solid var(--color-border);
+}
+.themed-table-row:hover {
+    background-color: var(--color-background);
+}
+
+.themed-action-button-view {
+    color: #3b82f6;
+}
+.themed-action-button-view:hover {
+    color: #1d4ed8;
+}
+.themed-action-button-edit {
+    color: #f59e0b;
+}
+.themed-action-button-edit:hover {
+    color: #b45309;
+}
+.themed-action-button-delete {
+    color: #ef4444;
+}
+.themed-action-button-delete:hover {
+    color: #b91c1c;
+}
+
+/* Estilos para el modal */
+:deep(.fwb-modal-header) {
+    background-color: var(--color-background-secondary);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-base);
+}
+
+:deep(.fwb-modal-body) {
+    background-color: var(--color-background-secondary);
+    color: var(--color-text-base);
+}
+:deep(.fwb-modal-body p),
+:deep(.fwb-modal-body strong),
+:deep(.fwb-modal-body h4),
+:deep(.fwb-modal-body label),
+:deep(.fwb-modal-body span) {
+    color: inherit;
+}
+
+:deep(.fwb-modal-footer) {
+    background-color: var(--color-background-secondary);
+    border-top: 1px solid var(--color-border);
+}
+</style>

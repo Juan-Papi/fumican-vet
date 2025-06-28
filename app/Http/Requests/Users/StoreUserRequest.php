@@ -28,6 +28,10 @@ class StoreUserRequest extends FormRequest
             'last_name' => 'required|string|max:50',
             'email' => 'required|email|unique:users,email',
             'role_id' => 'required|exists:roles,id',
+            // AÑADIDO: Se hace la contraseña opcional para permitir la autogeneración.
+            // Si el frontend envía una contraseña manual, será validada.
+            // Si no se envía (porque es automática), esta regla no fallará.
+            'password' => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
         ];
     }
 }

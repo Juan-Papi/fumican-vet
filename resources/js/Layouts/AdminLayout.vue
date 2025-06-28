@@ -1,20 +1,27 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { Head } from "@inertiajs/vue3";
 import Banner from "@/Components/Banner.vue";
 import Sidebar from "@/Components/Sidebars/Sidebar.vue";
 import MobileSidebar from "@/Components/Sidebars/MobileSidebar.vue";
 import Header from "@/Components/Headers/Header.vue";
 import Footer from "@/Components/Footers/AdminFooter.vue";
+import { useTheme } from '@/Composables/useTheme';
 
+// Inicializa el sistema de temas
+const { initTheme } = useTheme();
+onMounted(() => {
+    initTheme();
+});
+
+// --- Component Props ---
 defineProps({
     title: String,
 });
 
+// --- Layout State Management ---
 const showingNavigationDropdown = ref(false);
 const openSubMenu = ref(null);
-const isNotificationsMenuOpen = ref(false);
-const isProfileMenuOpen = ref(false);
 
 const toggleSideMenu = () => {
     showingNavigationDropdown.value = !showingNavigationDropdown.value;
@@ -22,14 +29,6 @@ const toggleSideMenu = () => {
 
 const toggleSubMenu = (menuName) => {
     openSubMenu.value = openSubMenu.value === menuName ? null : menuName;
-};
-
-const toggleNotificationsMenu = () => {
-    isNotificationsMenuOpen.value = !isNotificationsMenuOpen.value;
-};
-
-const toggleProfileMenu = () => {
-    isProfileMenuOpen.value = !isProfileMenuOpen.value;
 };
 
 const closeSideMenu = () => {
@@ -40,13 +39,8 @@ const closeSideMenu = () => {
 <template>
     <div>
         <Head :title="title" />
-
         <Banner />
-
-        <div
-            class="flex h-screen bg-gray-50 dark:bg-gray-900"
-            :class="{ 'overflow-hidden': showingNavigationDropdown }"
-        >
+        <div class="flex h-screen page-background" :class="{ 'overflow-hidden': showingNavigationDropdown }">
             <!-- Sidebar para Desktop -->
             <Sidebar
                 :openSubMenu="openSubMenu"
@@ -56,6 +50,7 @@ const closeSideMenu = () => {
             <!-- Sidebar para Mobile -->
             <MobileSidebar
                 :showing-navigation-dropdown="showingNavigationDropdown"
+                @close-side-menu="closeSideMenu"
             />
 
             <div class="flex flex-col flex-1 w-full">
@@ -75,6 +70,19 @@ const closeSideMenu = () => {
 </template>
 
 <style>
+/* La importación de themes.css fue movida a resources/js/app.js */
+
+/* Aplica las variables CSS a los elementos base */
+body {
+    font-size: var(--font-size-base);
+}
+
+.page-background {
+    background-color: var(--color-background);
+    color: var(--color-text-base);
+}
+
+/* Estilos de la tabla y scrollbar */
 .th {
     background-color: #e5e7eb;
 }
@@ -84,19 +92,16 @@ const closeSideMenu = () => {
     height: 8px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
     background: #dadada;
     border-radius: 5px;
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
     background: #a0a0a0;
     border-radius: 5px;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: #909090;
 }

@@ -26,7 +26,7 @@ class UpdateMedicalConsultationRequest extends FormRequest
         return [
             'reason' => 'required|string|max:255',
             'dewormed_at' => 'nullable|date',
-            'previous_ilnesses' => 'nullable|string|max:255',
+            'previous_illnesses' => 'nullable|string|max:255',
             'previous_interventions' => 'nullable|string|max:255',
             'general_condition' => 'required|string|max:120',
             'weight' => 'required|numeric|min:0',

@@ -6,6 +6,8 @@ import {
     FwbListGroupItem,
 } from "flowbite-vue";
 import { Link, router } from "@inertiajs/vue3";
+import ThemeSwitcher from '@/Components/ThemeSwitcher.vue';
+
 defineProps({
     toggleSideMenu: Function,
     user: Object,
@@ -17,9 +19,9 @@ const logout = () => {
 </script>
 
 <template>
-    <header class="z-10 py-4 bg-white shadow-md dark:bg-gray-800">
+    <header class="z-10 py-4 shadow-md themed-header-bg themed-header-border-b">
         <div
-            class="container flex items-center justify-between h-full px-6 mx-auto text-purple-600 dark:text-purple-300"
+            class="container flex items-center justify-between h-full px-6 mx-auto themed-header-text"
         >
             <!-- Mobile hamburger -->
             <button
@@ -40,6 +42,7 @@ const logout = () => {
                     ></path>
                 </svg>
             </button>
+
             <!-- Search input -->
             <div class="flex justify-center flex-1 lg:mr-32">
                 <div
@@ -60,7 +63,7 @@ const logout = () => {
                         </svg>
                     </div>
                     <input
-                        class="w-full pl-8 pr-2 text-sm text-gray-700 placeholder-gray-600 bg-gray-100 border-0 rounded-md dark:placeholder-gray-500 dark:focus:shadow-outline-gray dark:focus:placeholder-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:placeholder-gray-500 focus:bg-white focus:border-purple-300 focus:outline-none focus:shadow-outline-purple form-input"
+                        class="w-full pl-8 pr-2 text-sm placeholder-gray-600 border-0 rounded-md focus:placeholder-gray-500 focus:bg-white focus:border-purple-300 focus:outline-none focus:shadow-outline-purple form-input themed-search-input"
                         type="text"
                         placeholder="Search for projects"
                         aria-label="Search"
@@ -68,32 +71,72 @@ const logout = () => {
                 </div>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <span class="hidden md:block text-sm text-gray-700 dark:text-gray-300">{{ user.first_name }} {{ user.last_name }}</span>
-                <FwbDropdown text="Menu" align-to-end>
-                    <template #trigger>
-                        <FwbAvatar
-                            :img="user.profile_photo_url"
-                            rounded
-                            class="cursor-pointer"
-                        />
-                    </template>
-                    <fwb-list-group>
-                        <fwb-list-group-item>
-                            <Link :href="route('profile.show')" class="w-full"> Perfil </Link>
-                        </fwb-list-group-item>
-                        <fwb-list-group-item> Settings </fwb-list-group-item>
-                        <fwb-list-group-item> Messages </fwb-list-group-item>
-                        <fwb-list-group-item>
-                            <form class="w-full" @submit.prevent="logout">
-                                <button class="w-full text-left" type="submit">
-                                    Cerrar sesión
-                                </button>
-                            </form>
-                        </fwb-list-group-item>
-                    </fwb-list-group>
-                </FwbDropdown>
-            </div>
+            <!-- Right side menu -->
+            <ul class="flex items-center flex-shrink-0 space-x-6">
+                <!-- Theme Switcher -->
+                <li class="flex">
+                    <ThemeSwitcher />
+                </li>
+
+                <!-- Profile menu -->
+                <li class="relative flex items-center space-x-4">
+                    <span class="hidden md:block text-sm themed-text-base">{{ user.first_name }} {{ user.last_name }}</span>
+                    <FwbDropdown text="Menu" align-to-end>
+                        <template #trigger>
+                            <FwbAvatar
+                                :img="user.profile_photo_url"
+                                rounded
+                                class="cursor-pointer"
+                            />
+                        </template>
+                        <fwb-list-group class="themed-dropdown">
+                            <fwb-list-group-item class="themed-dropdown-item">
+                                <Link :href="route('profile.show')" class="w-full"> Perfil </Link>
+                            </fwb-list-group-item>
+                            <fwb-list-group-item class="themed-dropdown-item"> Settings </fwb-list-group-item>
+                            <fwb-list-group-item class="themed-dropdown-item">
+                                <form class="w-full" @submit.prevent="logout">
+                                    <button class="w-full text-left" type="submit">
+                                        Cerrar sesión
+                                    </button>
+                                </form>
+                            </fwb-list-group-item>
+                        </fwb-list-group>
+                    </FwbDropdown>
+                </li>
+            </ul>
         </div>
     </header>
 </template>
+
+<style scoped>
+.themed-header-bg {
+    background-color: var(--color-background-secondary);
+}
+.themed-header-border-b {
+    border-bottom: 1px solid var(--color-border);
+}
+.themed-header-text {
+    color: var(--color-primary);
+}
+.themed-text-base {
+    color: var(--color-text-base);
+}
+.themed-search-input {
+    background-color: var(--color-background);
+    color: var(--color-text-base);
+}
+.themed-search-input::placeholder {
+    color: var(--color-text-muted);
+}
+.themed-dropdown {
+    background-color: var(--color-background-secondary);
+    border-color: var(--color-border);
+}
+.themed-dropdown-item {
+    color: var(--color-text-base);
+}
+.themed-dropdown-item:hover {
+    background-color: var(--color-background);
+}
+</style>

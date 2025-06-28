@@ -20,8 +20,10 @@
         "vue": "^3.3.13"
     },
     "dependencies": {
+        "apexcharts": "^4.7.0",
         "flowbite": "^2.5.2",
         "flowbite-vue": "^0.1.6",
-        "vue-multiselect": "^3.1.0"
+        "vue-multiselect": "^3.1.0",
+        "vue3-apexcharts": "^1.8.0"
     }
 }

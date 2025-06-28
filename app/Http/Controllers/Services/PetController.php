@@ -8,94 +8,58 @@ use App\Http\Requests\Services\UpdatePetRequest;
 use App\Services\Services\BreedService;
 use App\Services\Services\PetService;
 use App\Services\Services\SpecieService;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
+use App\Models\Services\Pet;
 
 class PetController extends Controller
 {
     public function __construct(protected PetService $service) {}
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): InertiaResponse
     {
-        $pets = $this->service->getAll();
-        return Inertia::render('Services/Pets/Index', ['pets' => $pets]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return Inertia::render('Services/Pets/Form', [
-            'formAction' => 'create'
+        return Inertia::render('Services/Pets/Index', [
+            'pets' => $this->service->getAll(),
+            'filters' => [],
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StorePetRequest $request): RedirectResponse
+    public function search(Request $request): InertiaResponse
     {
-        $this->service->create($request->validated());
-        return redirect()->route('pets.index');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $pet = $this->service->getById($id);
-        $pet->load(['breed.specie', 'owner']);
-        return Inertia::render('Services/Pets/Form', [
-            'formAction' => 'edit',
-            'pet' => $pet
+        $filters = $request->only('search_term');
+        return Inertia::render('Services/Pets/Index', [
+            'pets' => $this->service->search($filters),
+            'filters' => $filters,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdatePetRequest $request, string $id)
+    public function store(StorePetRequest $request): JsonResponse
     {
-        $data = $request->validated();
-        $this->service->update($id, $data);
-        return redirect()->route('pets.index');
+        $pet = $this->service->create($request->validated());
+        return response()->json(['message' => 'Mascota registrada correctamente.', 'pet' => $pet], 201);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function update(UpdatePetRequest $request, Pet $pet): JsonResponse
     {
-        //
+        $this->service->update($pet->id, $request->validated());
+        return response()->json(['message' => 'Mascota actualizada correctamente.']);
     }
 
-    /**
-     * Search for a specific resource.
-     */
-    public function search(Request $request)
+    public function destroy(Pet $pet): JsonResponse
     {
-        $pets = $this->service->search($request->search);
+        $this->service->delete($pet->id);
+        return response()->json(['message' => 'Mascota eliminada correctamente.']);
+    }
+
+    public function autocomplete(Request $request): JsonResponse
+    {
+        $pets = $this->service->autocompleteSearch($request->search);
         return response()->json($pets);
     }
 
-    /**
-     * Prepare data to store a resource.Create a breed and/or specie if they don't exist.
-     */
-    public function prepareStoreData(Request $request, SpecieService $specieService, BreedService $breedService)
+    public function prepareStoreData(Request $request, SpecieService $specieService, BreedService $breedService): JsonResponse
     {
         try {
             $specie = $specieService->findOrCreate($request->specie);
