@@ -43,16 +43,17 @@ class PetRepository
      */
     public function searchWithFilters(array $filters)
     {
-        // CORREGIDO: Añadido 'ci' a la lista de columnas del propietario.
         $query = $this->model->with(['owner:id,first_name,last_name,ci', 'breed.specie:id,name']);
 
         if (!empty($filters['search_term'])) {
             $term = $filters['search_term'];
+            // ¡Esta parte ya está correcta! Usa el closure ->where(function($q){...})
             $query->where(function ($q) use ($term) {
                 $q->where('name', 'like', "%{$term}%")
                     ->orWhereHas('owner', function ($qOwner) use ($term) {
                         $qOwner->where('first_name', 'like', "%{$term}%")
-                            ->orWhere('last_name', 'like', "%{$term}%");
+                            ->orWhere('last_name', 'like', "%{$term}%")
+                            ->orWhere('ci', 'like', "%{$term}%"); // AÑADIDO: Buscar también por CI
                     });
             });
         }
@@ -62,19 +63,25 @@ class PetRepository
 
 
     /**
-     * CORREGIDO: El método de búsqueda original, ahora renombrado para el autocompletado.
+     * CORREGIDO: El método de búsqueda original, ahora renombrado y con la lógica de consulta correcta.
      */
     public function autocompleteSearch(string $term)
     {
-        return $this->model
-            ->with(['owner:id,ci,first_name,last_name', 'breed.specie:id,name'])
-            ->where('name', 'like', "%{$term}%")
-            ->orWhereHas('owner', function ($query) use ($term) {
-                $query->where('first_name', 'like', "%{$term}%")
-                    ->orWhere('last_name', 'like', "%{$term}%");
-            })
-            ->orderBy('updated_at', 'desc')
-            ->take(8)
+        $query = $this->model
+            ->with(['owner:id,ci,first_name,last_name', 'breed.specie:id,name']);
+
+        // CORRECCIÓN: Envolver la lógica 'OR' en un closure para evitar resultados inesperados.
+        $query->where(function ($q) use ($term) {
+            $q->where('name', 'like', "%{$term}%")
+                ->orWhereHas('owner', function ($qOwner) use ($term) {
+                    $qOwner->where('first_name', 'like', "%{$term}%")
+                        ->orWhere('last_name', 'like', "%{$term}%")
+                        ->orWhere('ci', 'like', "%{$term}%"); // AÑADIDO: Buscar también por CI
+                });
+        });
+
+        return $query->orderBy('name', 'asc') // Ordenar por nombre es más útil para autocompletado
+            ->take(10) // Limitar a 10 resultados es suficiente
             ->get();
     }
 }

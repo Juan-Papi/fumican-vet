@@ -48,7 +48,8 @@ Route::middleware([
 
         Route::group(['prefix' => 'customers', 'as' => 'customers.'], function () {
             Route::get('/', [CustomerController::class, 'index'])->name('index');
-            Route::get('search', [CustomerController::class, 'search'])->name('search'); // Para filtrar la lista y para autocomplete
+            Route::get('search', [CustomerController::class, 'search'])->name('search'); // Esta será SOLO para filtrar la tabla
+            Route::get('autocomplete', [CustomerController::class, 'autocomplete'])->name('autocomplete'); // <-- NUEVA RUTA
             Route::post('/', [CustomerController::class, 'store'])->name('store');
             Route::put('{customer}', [CustomerController::class, 'update'])->name('update');
             Route::delete('{customer}', [CustomerController::class, 'destroy'])->name('destroy');

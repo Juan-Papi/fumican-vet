@@ -20,6 +20,7 @@ import {
 } from "flowbite-vue";
 import { computed, ref, watch } from "vue";
 import axios from "axios";
+import { useDebouncedRef } from "@/Utils/debouncedRef";
 
 // Components
 import InputError from "@/Components/InputError.vue";
@@ -28,7 +29,6 @@ import TextInput from "@/Components/TextInput.vue";
 import FormSectionTitle from "@/Components/Forms/FormSectionTitle.vue";
 import SearchModal from "@/Components/Modals/SearchModal.vue";
 import SearchUser from "@/Components/Icons/Svg/SearchUser.vue";
-import { useDebouncedRef } from "@/Utils/debouncedRef";
 
 // --- PROPS & FILTERS ---
 const props = defineProps({ pets: Object, filters: Object });
@@ -91,7 +91,7 @@ const isFetchingBreeds = ref(false);
 const selectedByBreed = ref(false);
 
 // --- OWNER SEARCH ---
-const ownerSearch = useDebouncedRef("", 500);
+const ownerSearch = useDebouncedRef("", 400);
 const isFetchingOwner = ref(false);
 const customersList = ref([]);
 
@@ -149,16 +149,20 @@ function closeAllModals() {
 
 // --- Dynamic Specie/Breed/Owner Logic ---
 watch(ownerSearch, async (value) => {
-    if (value.length < 1) {
+    if (value.length < 2) {
         customersList.value = [];
         return;
     }
     isFetchingOwner.value = true;
     try {
-        const response = await axios.get(route("customers.search"), {
+        const response = await axios.get(route("customers.autocomplete"), {
             params: { search: value },
         });
         customersList.value = response.data;
+    } catch (error) {
+        console.error("Error al buscar propietarios:", error);
+        displayToast("danger", "No se pudieron cargar los propietarios.");
+        customersList.value = [];
     } finally {
         isFetchingOwner.value = false;
     }
@@ -169,6 +173,7 @@ function selectOwner(customer) {
     form.value.customer_id = customer.id;
     isSearchOwnerModal.value = false;
     ownerSearch.value = "";
+    customersList.value = [];
 }
 
 const areStringsEquals = (item, value) =>
@@ -237,39 +242,48 @@ function selectBreed(pickedBreed) {
 }
 
 // --- CRUD ---
+// CORREGIDO: Se usa axios para capturar la respuesta JSON del backend y mostrar el mensaje dinámico en el toast.
 async function submitForm() {
     loading.value = true;
     formErrors.value = {};
+
     try {
-        // Prepare specie and breed if they are new
+        // La lógica de 'prepare-data' se mantiene igual
         if (
             (!form.value.breed_id && breed.value) ||
             (!form.value.specie_id && specie.value)
         ) {
-            const response = await axios.post(route("pets.prepare-data"), {
+            const prepResponse = await axios.post(route("pets.prepare-data"), {
                 breed: breed.value,
                 specie: specie.value,
             });
-            form.value.breed_id = response.data.breed_id;
+            form.value.breed_id = prepResponse.data.breed_id;
         }
 
+        let response;
         if (modalMode.value === "edit") {
-            await axios.put(
+            response = await axios.put(
                 route("pets.update", selectedPet.value.id),
                 form.value
             );
-            displayToast("success", "Mascota actualizada correctamente.");
         } else {
-            await axios.post(route("pets.store"), form.value);
-            displayToast("success", "Mascota registrada correctamente.");
+            response = await axios.post(route("pets.store"), form.value);
         }
+
+        // Usar el mensaje dinámico de la respuesta del backend
+        displayToast("success", response.data.message);
+
         closeAllModals();
         router.reload({ only: ["pets"] });
     } catch (e) {
         if (e.response?.status === 422) {
             formErrors.value = e.response.data.errors;
-            displayToast("danger", "Por favor, corrige los errores.");
+            // Usar un mensaje de error genérico o el del backend si lo hubiera
+            const errorMessage =
+                e.response.data.message || "Por favor, corrige los errores.";
+            displayToast("danger", errorMessage);
         } else {
+            // Mensaje para otros errores (ej. 500, error de red)
             displayToast("danger", "Ocurrió un error inesperado.");
         }
     } finally {
@@ -277,15 +291,23 @@ async function submitForm() {
     }
 }
 
+// CORREGIDO: Se usa axios para consistencia y para capturar el mensaje del backend.
 async function submitDelete() {
     loading.value = true;
     try {
-        await axios.delete(route("pets.destroy", selectedPet.value.id));
-        displayToast("success", "Mascota eliminada correctamente.");
+        const response = await axios.delete(
+            route("pets.destroy", selectedPet.value.id)
+        );
+
+        // Usar el mensaje dinámico de la respuesta del backend
+        displayToast("success", response.data.message);
+
         closeAllModals();
         router.reload({ only: ["pets"] });
     } catch (e) {
-        displayToast("danger", "Error al eliminar la mascota.");
+        const errorMessage =
+            e.response?.data?.message || "Error al eliminar la mascota.";
+        displayToast("danger", errorMessage);
     } finally {
         loading.value = false;
     }
@@ -294,14 +316,12 @@ async function submitDelete() {
 
 <template>
     <AdminLayout title="Mascotas">
-        <!-- Toast & Modals -->
         <div class="fixed top-4 right-4 z-50">
             <FwbToast v-if="showToast" :type="toastType" closable>{{
                 toastMsg
             }}</FwbToast>
         </div>
 
-        <!-- Header & Actions -->
         <div class="flex justify-between my-6 items-center">
             <h2 class="text-2xl font-semibold">Mascotas</h2>
             <FwbButton
@@ -312,7 +332,6 @@ async function submitDelete() {
             >
         </div>
 
-        <!-- Filters -->
         <form
             @submit.prevent="applyFilters"
             class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-100 rounded-lg"
@@ -336,7 +355,6 @@ async function submitDelete() {
             </div>
         </form>
 
-        <!-- Pets Table -->
         <FwbTable>
             <FwbTableHead>
                 <FwbTableHeadCell>Nombre</FwbTableHeadCell>
@@ -400,7 +418,6 @@ async function submitDelete() {
             />
         </div>
 
-        <!-- View Modal -->
         <FwbModal size="lg" v-if="isViewModal" @close="closeAllModals">
             <template #header
                 ><h3 class="text-xl font-semibold">
@@ -431,7 +448,6 @@ async function submitDelete() {
             >
         </FwbModal>
 
-        <!-- Delete Modal -->
         <FwbModal v-if="isDeleteModal" @close="closeAllModals">
             <template #header>Confirmar Eliminación</template>
             <template #body
@@ -456,7 +472,6 @@ async function submitDelete() {
             </template>
         </FwbModal>
 
-        <!-- Create/Edit Modal -->
         <FwbModal size="4xl" v-if="isCreateOrEditModal" @close="closeAllModals">
             <template #header
                 ><h3 class="text-xl font-semibold">
@@ -612,7 +627,6 @@ async function submitDelete() {
             </template>
         </FwbModal>
 
-        <!-- Search Owner Modal -->
         <SearchModal
             v-if="isSearchOwnerModal"
             @close="isSearchOwnerModal = false"
