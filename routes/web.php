@@ -14,9 +14,11 @@ use App\Http\Controllers\Sales\WarehouseController;
 use App\Http\Controllers\Sales\PurchaseNoteController;
 use App\Http\Controllers\Sales\SalesNoteController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Reservations\ReserveController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -162,3 +164,5 @@ Route::middleware([
         });
     });
 });
+
+Route::post('/reserve-pdf', [ReserveController::class, 'reservePdf'])->name('reservations.reserve-pdf');
