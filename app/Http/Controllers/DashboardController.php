@@ -20,7 +20,16 @@ class DashboardController extends Controller
     {
         // --- GRÁFICOS DE SERVICIOS ---
         // 1. Consultas por Mes
-        $consultationsByMonth = MedicalConsultation::select(DB::raw('count(id) as count'), DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'))->where('created_at', '>=', now()->subYear())->groupBy('month')->orderBy('month', 'asc')->get()->keyBy('month');
+        // NOTA: Modificado para PostgreSQL - Se cambió DATE_FORMAT por TO_CHAR
+        $consultationsByMonth = MedicalConsultation::select(
+            DB::raw('count(id) as count'), 
+            DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month")
+        )
+        ->where('created_at', '>=', now()->subYear())
+        ->groupBy(DB::raw("TO_CHAR(created_at, 'YYYY-MM')"))
+        ->orderBy('month', 'asc')
+        ->get()
+        ->keyBy('month');
         $consultationMonths = [];
         $consultationData = [];
         for ($i = 11; $i >= 0; $i--) {
@@ -36,7 +45,7 @@ class DashboardController extends Controller
         // 3. Nuevos Clientes (últimos 6 meses) - RE-AÑADIDO
         $newCustomersByMonth = Customer::select(
             DB::raw('count(id) as count'),
-            DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month')
+            DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month")
         )
             ->where('created_at', '>=', now()->subMonths(6))
             ->groupBy('month')
@@ -56,8 +65,30 @@ class DashboardController extends Controller
         // --- GRÁFICOS DE VENTAS Y COMPRAS ---
 
         // 4. Ventas y Compras (últimos 6 meses)
-        $salesByMonth = SalesNote::select(DB::raw('SUM(total_amount) as total'), DB::raw('DATE_FORMAT(sale_date, "%Y-%m") as month'))->where('sale_date', '>=', now()->subMonths(6))->groupBy('month')->orderBy('month', 'asc')->get()->keyBy('month');
-        $purchasesByMonth = PurchaseNote::select(DB::raw('SUM(total_amount) as total'), DB::raw('DATE_FORMAT(purchase_date, "%Y-%m") as month'))->where('purchase_date', '>=', now()->subMonths(6))->groupBy('month')->orderBy('month', 'asc')->get()->keyBy('month');
+        // NOTA: Modificado para PostgreSQL
+        // - Se cambió DATE_FORMAT por TO_CHAR
+        // - Se añadió CAST a DATE para asegurar el tipo de dato
+        // - Se formateó la fecha en la cláusula where para coincidir con el formato de PostgreSQL
+        $salesByMonth = SalesNote::select(
+                DB::raw('SUM(CAST(total_amount AS DECIMAL(10,2))) as total'), 
+                DB::raw("TO_CHAR(CAST(sale_date AS DATE), 'YYYY-MM') as month")
+            )
+            ->where('sale_date', '>=', now()->subMonths(6)->format('Y-m-d'))
+            ->groupBy(DB::raw("TO_CHAR(CAST(sale_date AS DATE), 'YYYY-MM')"))
+            ->orderBy('month', 'asc')
+            ->get()
+            ->keyBy('month');
+            
+        // Mismas modificaciones para las compras
+        $purchasesByMonth = PurchaseNote::select(
+                DB::raw('SUM(CAST(total_amount AS DECIMAL(10,2))) as total'), 
+                DB::raw("TO_CHAR(CAST(purchase_date AS DATE), 'YYYY-MM') as month")
+            )
+            ->where('purchase_date', '>=', now()->subMonths(6)->format('Y-m-d'))
+            ->groupBy(DB::raw("TO_CHAR(CAST(purchase_date AS DATE), 'YYYY-MM')"))
+            ->orderBy('month', 'asc')
+            ->get()
+            ->keyBy('month');
 
         $salesMonths = [];
         $salesData = [];
