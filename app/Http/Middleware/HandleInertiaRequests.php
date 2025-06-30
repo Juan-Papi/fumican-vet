@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
                     $query->whereIn('permission_id', $permissionsIds);
                 }])->get()
                 : null,
+            'visitCount' => \App\Models\Visit::getCount(),
         ]);
     }
 }

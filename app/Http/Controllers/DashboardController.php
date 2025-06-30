@@ -144,8 +144,12 @@ class DashboardController extends Controller
             ]
         ];
 
+        // Obtener el contador de visitas
+        $visitCount = \App\Models\Visit::getCount();
+
         return Inertia::render('Dashboard', [
-            'stats' => $stats
+            'stats' => $stats,
+            'visitCount' => $visitCount
         ]);
     }
 }
