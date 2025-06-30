@@ -1,6 +1,9 @@
 import './bootstrap';
 import '../css/app.css';
 import '../css/theme.css';
+import '../css/dark-overrides.css';
+import '../css/female-overrides.css';
+import '../css/elderly-overrides.css';
 import '../../node_modules/flowbite-vue/dist/index.css'
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
