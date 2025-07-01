@@ -64,3 +64,69 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## ING DE LA CALIDAD
+
+### COMANDOS PARA REALIZAR PRUEBAS UNITARIAS
+
+- Crear un archivo para prueba unitaria
+
+```
+php artisan make:test ExampleTest --unit
+```
+
+- Comando para ejecutar una prueba unitaria
+(Ejecuta un test especifico)
+```
+php artisan test --filter=UserTest
+```
+
+(Ejecuta un metodo especifico del test)
+```
+php artisan test --filter=test_user_full_name
+```
+
+### COMANDOS PARA REALIZAR PRUEBAS DE INTEGRACION
+
+- Crear un archivo para prueba de integracion
+
+```
+php artisan make:test ExampleTest --feature
+```
+
+- Comando para ejecutar una prueba de integracion
+```
+php artisan test --filter=UserTest
+```
+### PRUEBA DE COBERTURA
+
+- Instalar php Xdebug en Linux (Ubuntu)
+
+```
+sudo apt install php-xdebug
+```
+
+si no se habilita el Xdebug, añade al archivo php.ini las siguientes lineas:
+
+```
+zend_extension=xdebug.so
+xdebug.mode=coverage
+```
+
+- Ejecutar en la terminal 
+
+```
+php artisan test --coverage
+```
+
+- Comando para generar el `coverage/index.html`
+```
+php artisan test --coverage-html=coverage
+```
+
+- Ver el reporte
+
+```
+code coverage/index.html
+```

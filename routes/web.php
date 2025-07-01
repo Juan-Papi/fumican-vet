@@ -13,6 +13,7 @@ use App\Http\Controllers\Sales\MedicamentController;
 use App\Http\Controllers\Sales\WarehouseController;
 use App\Http\Controllers\Sales\PurchaseNoteController;
 use App\Http\Controllers\Sales\SalesNoteController;
+use App\Http\Controllers\Calidad\CalidadController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -160,5 +161,10 @@ Route::middleware([
             Route::get('{id}/pdf', [SalesNoteController::class, 'generatePdf'])->name('sales-note.pdf');
             Route::delete('{id}', [SalesNoteController::class, 'destroy'])->name('sales-note.destroy');
         });
+
+
     });
+     // CALIDAD
+    Route::get('/calidad/prompt', [CalidadController::class, 'index'])->name('calidad.prompt.index');
+    Route::post('/calidad/generate', [CalidadController::class, 'generate'])->name('calidad.prompt.generate');
 });
