@@ -7,6 +7,9 @@ import {
 } from "flowbite-vue";
 import { Link, router } from "@inertiajs/vue3";
 import ThemeSwitcher from '@/Components/ThemeSwitcher.vue';
+import { ref, watch } from "vue";
+import axios from "axios";
+import { useDebouncedRef } from "@/Utils/debouncedRef.js"; // <-- Importamos nuestro debouncer
 
 defineProps({
     toggleSideMenu: Function,
@@ -16,14 +19,57 @@ defineProps({
 const logout = () => {
     router.post(route("logout"));
 };
+
+// --- Lógica de Búsqueda Global ---
+const searchTerm = useDebouncedRef('', 300); // 300ms de espera antes de buscar
+const searchResults = ref([]);
+const isSearching = ref(false);
+const showResultsDropdown = ref(false);
+
+watch(searchTerm, async (newTerm) => {
+    if (newTerm.length < 2) {
+        searchResults.value = [];
+        showResultsDropdown.value = false;
+        return;
+    }
+    isSearching.value = true;
+    try {
+        const response = await axios.get(route('global.search'), {
+            params: { term: newTerm }
+        });
+        searchResults.value = response.data;
+        showResultsDropdown.value = searchResults.value.length > 0;
+    } catch (error) {
+        console.error('Error durante la búsqueda global:', error);
+        searchResults.value = [];
+    } finally {
+        isSearching.value = false;
+    }
+});
+
+const goToResult = (url) => {
+  router.get(url, {}, {
+    preserveState: false, // Carga la página completa para aplicar los filtros
+  });
+  searchTerm.value = '';
+  searchResults.value = [];
+  showResultsDropdown.value = false;
+};
+
+// Cierra el dropdown si se hace clic fuera
+const closeDropdown = () => {
+    setTimeout(() => {
+        showResultsDropdown.value = false;
+    }, 200); // Pequeño delay para permitir el clic en el resultado
+};
+
 </script>
 
 <template>
-    <header class="z-10 py-4 shadow-md themed-header-bg themed-header-border-b">
+    <header class="z-30 py-4 shadow-md themed-header-bg themed-header-border-b">
         <div
             class="container flex items-center justify-between h-full px-6 mx-auto themed-header-text"
         >
-            <!-- Mobile hamburger -->
             <button
                 class="p-1 mr-5 -ml-1 rounded-md lg:hidden focus:outline-none focus:shadow-outline-purple"
                 @click="toggleSideMenu"
@@ -43,7 +89,6 @@ const logout = () => {
                 </svg>
             </button>
 
-            <!-- Search input -->
             <div class="flex justify-center flex-1 lg:mr-32">
                 <div
                     class="relative w-full max-w-xl mr-6 focus-within:text-purple-500"
@@ -63,22 +108,38 @@ const logout = () => {
                         </svg>
                     </div>
                     <input
+                        v-model="searchTerm"
+                        @focus="showResultsDropdown = true"
+                        @blur="closeDropdown"
                         class="w-full pl-8 pr-2 text-sm placeholder-gray-600 border-0 rounded-md focus:placeholder-gray-500 focus:bg-white focus:border-purple-300 focus:outline-none focus:shadow-outline-purple form-input themed-search-input"
                         type="text"
-                        placeholder="Search for projects"
+                        placeholder="Búsqueda global..."
                         aria-label="Search"
                     />
+                    <div v-if="showResultsDropdown && searchTerm.length > 1" class="absolute left-0 right-0 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg overflow-hidden">
+                        <ul>
+                            <li v-if="isSearching" class="px-4 py-2 text-sm text-gray-500">Buscando...</li>
+                            <li v-else-if="searchResults.length === 0" class="px-4 py-2 text-sm text-gray-500">No se encontraron resultados.</li>
+                            <li
+                                v-for="(result, index) in searchResults"
+                                :key="index"
+                                @click="goToResult(result.url)"
+                                class="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                            >
+                                <p class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ result.title }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ result.description }}</p>
+                                <span class="text-xs font-bold text-purple-600 dark:text-purple-400">{{ result.type }}</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right side menu -->
             <ul class="flex items-center flex-shrink-0 space-x-6">
-                <!-- Theme Switcher -->
                 <li class="flex">
                     <ThemeSwitcher />
                 </li>
 
-                <!-- Profile menu -->
                 <li class="relative flex items-center space-x-4">
                     <span class="hidden md:block text-sm themed-text-base">{{ user.first_name }} {{ user.last_name }}</span>
                     <FwbDropdown text="Menu" align-to-end>

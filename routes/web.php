@@ -16,6 +16,7 @@ use App\Http\Controllers\Sales\SalesNoteController;
 use App\Http\Controllers\Calidad\CalidadController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Reservations\ReserveController;
+use App\Http\Controllers\GlobalSearchController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -172,3 +173,4 @@ Route::middleware([
 });
 
 Route::post('/reserve-pdf', [ReserveController::class, 'reservePdf'])->name('reservations.reserve-pdf');
+Route::get('/global-search', [GlobalSearchController::class, 'search'])->name('global.search');
