@@ -1,5 +1,56 @@
 /* elderly-overrides.css: Fuerza tema accesible/adulto mayor global para fondo y texto en todos los elementos principales */
 
+/* Mejora visual para checkboxes y radios en tema accesible */
+.theme-elderly .estado-general-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2em;
+  margin-bottom: 1em;
+}
+.theme-elderly .estado-general-radio-group .fwb-radio {
+  min-width: 110px;
+  flex: 1 1 110px;
+  max-width: 200px;
+  box-sizing: border-box;
+}
+
+
+.theme-elderly input[type="checkbox"],
+.theme-elderly input[type="radio"] {
+  width: 1.3em;
+  height: 1.3em;
+  accent-color: #F59E42;
+  border: 2px solid #1E293B !important;
+  border-radius: 0.4em;
+  background-color: #FEFCE8;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 1px 4px 0 #f59e4222;
+}
+.theme-elderly input[type="checkbox"]:focus,
+.theme-elderly input[type="radio"]:focus {
+  outline: 2px solid #F59E42 !important;
+  box-shadow: 0 0 0 2px #f59e4299;
+  border-color: #2563EB !important;
+}
+.theme-elderly input[type="checkbox"]:checked,
+.theme-elderly input[type="radio"]:checked {
+  background-color: #F59E42 !important;
+  border-color: #F59E42 !important;
+  box-shadow: 0 0 0 2px #f59e4299;
+}
+.theme-elderly label {
+  color: var(--color-text-base) !important;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+.theme-elderly label input[type="checkbox"],
+.theme-elderly label input[type="radio"] {
+  margin-right: 0.6em;
+  vertical-align: middle;
+}
+
+
 html.theme-elderly, body.theme-elderly, .theme-elderly {
   background-color: var(--color-background) !important;
   color: var(--color-text-base) !important;
