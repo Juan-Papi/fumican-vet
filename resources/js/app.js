@@ -1,11 +1,17 @@
 import './bootstrap';
 import '../css/app.css';
 import '../css/theme.css';
+import '../css/dark-overrides.css';
+import '../css/female-overrides.css';
+import '../css/elderly-overrides.css';
 import '../../node_modules/flowbite-vue/dist/index.css'
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import axios from 'axios' 
+window.axios = axios 
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

@@ -568,7 +568,7 @@ async function submitDelete() {
                         >
                             <div>
                                 <InputLabel value="Estado General" />
-                                <div class="flex gap-4 mt-2">
+                                <div class="estado-general-radio-group">
                                     <FwbRadio
                                         v-model="form.general_condition"
                                         value="Bueno"

@@ -16,7 +16,7 @@ onMounted(() => {
 
 // --- Component Props ---
 defineProps({
-    title: String,
+    title: String
 });
 
 // --- Layout State Management ---
@@ -63,7 +63,7 @@ const closeSideMenu = () => {
                         <slot />
                     </div>
                 </main>
-                <Footer />
+                <Footer :visit-count="$page.props.visitCount ?? 0" />
             </div>
         </div>
     </div>
