@@ -100,7 +100,7 @@ Route::middleware([
             Route::post('/', [CategoryController::class, 'store'])->name('category.store');
             Route::put('{id}', [CategoryController::class, 'update'])->name('category.update');
             Route::delete('{id}', [CategoryController::class, 'destroy'])->name('category.destroy');
-            Route::get('search', [CategoryController::class, 'search'])->name('supplier.search');
+            Route::get('search', [CategoryController::class, 'search'])->name('category.search');
         });
 
         Route::group(['prefix' => 'medicaments'], function () {

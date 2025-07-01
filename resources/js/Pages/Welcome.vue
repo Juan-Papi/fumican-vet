@@ -116,7 +116,7 @@
         <div>
           <h3 class="text-2xl font-bold mb-4">Amor, cuidado y compromiso</h3>
           <p class="text-lg text-gray-600 dark:text-gray-300">
-            En Veterinaria Patitas, nuestro objetivo es ofrecer atención médica y emocional de calidad a tus
+            En Veterinaria Fumican, nuestro objetivo es ofrecer atención médica y emocional de calidad a tus
             mascotas.
             Contamos con un equipo profesional apasionado por el bienestar animal, tecnología moderna y un
             ambiente amigable.

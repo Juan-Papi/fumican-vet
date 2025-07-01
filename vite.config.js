@@ -17,4 +17,6 @@ export default defineConfig({
             },
         }),
     ],
+
+    base: "/inf513/grupo17sa/proyecto2/public/",
 });
