@@ -13,6 +13,11 @@
   max-width: 200px;
   box-sizing: border-box;
 }
+.theme-female .estado-general-radio-group .fwb-radio label {
+  font-weight: 600;
+  line-height: 1.6;
+}
+
 
 .theme-female input[type="checkbox"],
 .theme-female input[type="radio"] {
