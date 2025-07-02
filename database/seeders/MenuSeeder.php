@@ -39,6 +39,12 @@ class MenuSeeder extends Seeder
                 'link' => null,
                 'parent_id' => null,
             ],
+            [
+                'name' => 'Tecnologia',
+                'icon' => 'fa-solid fa-laptop',
+                'link' => null,
+                'parent_id' => null,
+            ],
         ]);
         DB::table('menus')->insert([
             [
@@ -126,6 +132,14 @@ class MenuSeeder extends Seeder
                 'link' => '/sales/suppliers',
                 'permission_id' => DB::table('permissions')->where('name', 'listar proveedores')->first()->id,
                 'parent_id' => DB::table('menus')->where('name', 'Ventas')->first()->id,
+            ],
+            // MODULO TECNOLOGIA
+            [
+                'name' => 'Configuración',
+                'icon' => null,
+                'link' => '/calidad/prompt',
+                'permission_id' => DB::table('permissions')->where('name', 'listar prompt')->first()->id,
+                'parent_id' => DB::table('menus')->where('name', 'Tecnologia')->first()->id,
             ],
         ]);
     }

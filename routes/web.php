@@ -13,8 +13,10 @@ use App\Http\Controllers\Sales\MedicamentController;
 use App\Http\Controllers\Sales\WarehouseController;
 use App\Http\Controllers\Sales\PurchaseNoteController;
 use App\Http\Controllers\Sales\SalesNoteController;
+use App\Http\Controllers\Calidad\CalidadController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Reservations\ReserveController;
+use App\Http\Controllers\GlobalSearchController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -162,7 +164,13 @@ Route::middleware([
             Route::get('{id}/pdf', [SalesNoteController::class, 'generatePdf'])->name('sales-note.pdf');
             Route::delete('{id}', [SalesNoteController::class, 'destroy'])->name('sales-note.destroy');
         });
+
+
     });
+     // CALIDAD
+    Route::get('/calidad/prompt', [CalidadController::class, 'index'])->name('calidad.prompt.index');
+    Route::post('/calidad/generate', [CalidadController::class, 'generate'])->name('calidad.prompt.generate');
 });
 
 Route::post('/reserve-pdf', [ReserveController::class, 'reservePdf'])->name('reservations.reserve-pdf');
+Route::get('/global-search', [GlobalSearchController::class, 'search'])->name('global.search');

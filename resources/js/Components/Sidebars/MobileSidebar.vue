@@ -47,6 +47,13 @@ const menus = ref([
             { name: "Proveedores", link: "/sales/suppliers" },
         ],
     },
+    {
+        name: "Tecnologia",
+        icon: "fa-solid fa-laptop",
+        submenus: [
+            { name: "Configuración", link: "/calidad/prompt" },
+        ],
+    }
 ]);
 
 const openSubMenu = ref(null);
