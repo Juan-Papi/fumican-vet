@@ -53,7 +53,7 @@
             @endif
         </div>
         <div class="footer">
-            Gracias por confiar en Veterinaria Fumican 🐾<br>
+            Gracias por confiar en Veterinaria Fumican<br>
             Santa Cruz de la Sierra | Cel: 700-00000
         </div>
     </div>

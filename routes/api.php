@@ -8,3 +8,5 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 Route::post('/generar-qr', [ReserveController::class, 'qr'])->name('reservations.qr');
+Route::post('/verificar-pago', [ReserveController::class, 'verificarPago']);
+

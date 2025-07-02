@@ -77,11 +77,21 @@
               class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-white text-xl">&times;</button>
 
             <h3 class="text-xl font-semibold mb-4">Escanea y paga con QR</h3>
-
-            <div class="flex justify-center mb-4">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://micuenta.vet/pago123"
-                alt="Código QR para pagar" class="w-48 h-48 rounded shadow-lg border" />
+            <!-- cambiar a dinamico -->
+            <div class="flex justify-center mb-4 min-h-[200px] items-center">
+              <div v-if="qrImageUrl">
+                <img :src="qrImageUrl" alt="QR generado" class="w-[400px] h-[400px] rounded shadow-lg border" />
+              </div>
+              <div v-else class="flex flex-col items-center text-gray-500 text-sm">
+                <svg class="animate-spin h-6 w-6 text-emerald-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                Generando QR...
+              </div>
             </div>
+
 
             <div v-if="paymentStatus === 'verificando'" class="text-center text-sm text-gray-500">
               <span class="inline-flex items-center">
@@ -195,6 +205,9 @@ const showToast = ref(false)
 const toastMsg = ref('')
 const toastType = ref('success')
 
+const qrImageUrl = ref('')
+const transactionId = ref('')
+
 const appointmentForm = ref({
   name: '',
   phone: '',
@@ -215,46 +228,129 @@ function showToastMessage(message, type = 'success') {
 
 const availableTimeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']
 
-function openPaymentModal() {
+async function openPaymentModal() {
   const data = appointmentForm.value
+
   if (
     data.name && data.phone && data.email && data.petName &&
     data.service && data.date && data.timeSlot
   ) {
+    qrImageUrl.value = ''
     showPaymentModal.value = true
+
+    const qr = await generateQrCode()
+
+    if (qr) {
+      qrImageUrl.value = 'data:image/png;base64,' + qr
+      confirmPayment()
+    } else {
+      closePaymentModal()
+    }
   } else {
     alert('Por favor, completa todos los campos obligatorios antes de pagar.')
   }
 }
 
+
+
 async function confirmPayment() {
   paymentStatus.value = 'verificando'
 
-  setTimeout(() => {
-    paymentStatus.value = 'completado'
+  let attempts = 0
+  const maxAttempts = 6
 
-    setTimeout(async () => {
-      closePaymentModal()
+  const interval = setInterval(async () => {
+    attempts++
 
-      loadingPdf.value = true 
-      await downloadReservationPdf()
-      loadingPdf.value = false 
+    const confirmado = await verifyPurchase(transactionId.value)
 
-      showToastMessage('Reserva realizada con éxito', 'success')
+    if (confirmado) {
+      clearInterval(interval)
+      paymentStatus.value = 'completado'
+      loadingPdf.value = true
 
-      appointmentForm.value = {
-        name: '', phone: '', email: '', petName: '',
-        service: '', date: '', timeSlot: '', comment: ''
-      }
-      showForm.value = false
-    }, 3000)
+      setTimeout(async () => {
+        await downloadReservationPdf() 
+        loadingPdf.value = false
+        closePaymentModal() 
+
+        showToastMessage('Reserva realizada con éxito', 'success')
+
+        appointmentForm.value = {
+          name: '', phone: '', email: '', petName: '',
+          service: '', date: '', timeSlot: '', comment: ''
+        }
+
+        showForm.value = false
+      }, 3000)
+    }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(interval)
+      paymentStatus.value = ''
+      showToastMessage('El pago no fue confirmado a tiempo. Intenta nuevamente.', 'danger')
+    }
   }, 5000)
 }
+
+
 
 
 function closePaymentModal() {
   showPaymentModal.value = false
   paymentStatus.value = ''
+}
+async function generateQrCode() {
+  try {
+    const response = await fetch('/api/generar-qr', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(appointmentForm.value)
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Respuesta no válida:', text);
+      throw new Error('Error al generar el QR');
+    }
+
+    const data = await response.json();
+    transactionId.value = data.numeroTransaccion 
+
+    return data.qrImage;
+  } catch (error) {
+    console.error('Error al generar el QR:', error);
+    showToastMessage('Ocurrió un error al generar el QR', 'danger');
+  }
+}
+
+async function verifyPurchase(transactionID) {
+  try {
+    const response = await fetch('/api/verificar-pago', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ numeroTransaccion: transactionID })
+    })
+
+    const result = await response.json()
+    console.log(result.data.EstadoTransaccion)
+
+    if (result.data && result.data.EstadoTransaccion === 5) {
+      return true
+    } else {
+      return false
+    }
+
+  } catch (error) {
+    console.error('Error al verificar el pago:', error)
+    return false
+  }
 }
 
 async function downloadReservationPdf() {
